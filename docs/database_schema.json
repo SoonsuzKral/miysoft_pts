@@ -1,0 +1,340 @@
+{
+  "project": "MİYSOFT PTS",
+  "generated_at": "2026-03-15",
+  "notes": "company_id tüm domain tablolarında zorunludur (row-level multi-tenant). PII alanlar şifreli saklanır.",
+  "modules": [
+    {
+      "name": "auth_users",
+      "title": "Kimlik Doğrulama & Kullanıcılar",
+      "tables": [
+        {
+          "name": "users",
+          "purpose": "Sisteme giriş yapan tüm kullanıcılar (admin, hr, çalışan)",
+          "columns": [
+            {"name":"id","type":"bigIncrements","nullable":false,"pk":true},
+            {"name":"company_id","type":"unsignedBigInteger","nullable":true,"index":true,"fk":"companies.id","notes":"Tenant scoping"},
+            {"name":"name","type":"string(191)","nullable":false},
+            {"name":"email","type":"string(191)","nullable":false,"unique":true},
+            {"name":"password","type":"string","nullable":false},
+            {"name":"is_active","type":"boolean","nullable":false,"default":true,"index":true},
+            {"name":"last_login_at","type":"datetime","nullable":true,"index":true},
+            {"name":"two_factor_enabled","type":"boolean","nullable":false,"default":false},
+            {"name":"settings","type":"json","nullable":true},
+            {"name":"created_by","type":"unsignedBigInteger","nullable":true,"fk":"users.id"},
+            {"name":"email_verified_at","type":"timestamp","nullable":true},
+            {"name":"remember_token","type":"string(100)","nullable":true},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"},
+            {"name":"deleted_at","type":"timestamp","nullable":true}
+          ],
+          "indexes": [
+            {"columns":["company_id","email"],"type":"unique"},
+            {"columns":["company_id","is_active"],"type":"index"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rbac",
+      "title": "Rol & İzin (RBAC)",
+      "tables": [
+        {
+          "name": "roles",
+          "purpose": "Kullanıcı rolleri (super_admin, company_admin, hr_manager, manager, finance, employee, viewer)",
+          "columns": [
+            {"name":"id","type":"bigIncrements","nullable":false,"pk":true},
+            {"name":"name","type":"string","nullable":false,"unique":true},
+            {"name":"guard_name","type":"string","nullable":false,"default":"web"},
+            {"name":"description","type":"string","nullable":true},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"}
+          ]
+        },
+        {
+          "name": "permissions",
+          "purpose": "Modül bazlı izinler (format: module.action)",
+          "columns": [
+            {"name":"id","type":"bigIncrements","nullable":false,"pk":true},
+            {"name":"name","type":"string","nullable":false,"unique":true},
+            {"name":"guard_name","type":"string","nullable":false,"default":"web"},
+            {"name":"module","type":"string","nullable":true,"notes":"Gruplandırma için"},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"}
+          ]
+        },
+        {
+          "name": "model_has_roles",
+          "purpose": "Kullanıcı-rol pivot",
+          "columns": [
+            {"name":"role_id","type":"unsignedBigInteger","fk":"roles.id"},
+            {"name":"model_type","type":"string"},
+            {"name":"model_id","type":"unsignedBigInteger"}
+          ]
+        },
+        {
+          "name": "role_has_permissions",
+          "purpose": "Rol-izin pivot",
+          "columns": [
+            {"name":"role_id","type":"unsignedBigInteger","fk":"roles.id"},
+            {"name":"permission_id","type":"unsignedBigInteger","fk":"permissions.id"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "company_structure",
+      "title": "Şirket Yapısı",
+      "tables": [
+        {
+          "name": "companies",
+          "purpose": "SaaS tenant ana tablosu",
+          "partition": "Partition gerekmez — orta büyüklük",
+          "columns": [
+            {"name":"id","type":"bigIncrements","nullable":false,"pk":true},
+            {"name":"name","type":"string","nullable":false},
+            {"name":"domain","type":"string","nullable":true,"unique":true,"index":true},
+            {"name":"tax_number","type":"string(20)","nullable":true},
+            {"name":"tax_office","type":"string(100)","nullable":true},
+            {"name":"phone","type":"string(20)","nullable":true},
+            {"name":"email","type":"string","nullable":true},
+            {"name":"address","type":"string","nullable":true},
+            {"name":"city","type":"string(100)","nullable":true},
+            {"name":"country","type":"string(100)","nullable":false,"default":"TR"},
+            {"name":"timezone","type":"string(100)","nullable":false,"default":"Europe/Istanbul"},
+            {"name":"locale","type":"string(10)","nullable":false,"default":"tr"},
+            {"name":"logo_path","type":"string","nullable":true},
+            {"name":"status","type":"enum(active,inactive,trial,suspended)","nullable":false,"default":"trial"},
+            {"name":"trial_ends_at","type":"date","nullable":true},
+            {"name":"settings","type":"json","nullable":true},
+            {"name":"created_by","type":"unsignedBigInteger","nullable":true,"fk":"users.id"},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"},
+            {"name":"deleted_at","type":"timestamp","nullable":true}
+          ]
+        },
+        {
+          "name": "departments",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"company_id","type":"unsignedBigInteger","index":true,"fk":"companies.id"},
+            {"name":"parent_department_id","type":"unsignedBigInteger","nullable":true,"fk":"departments.id"},
+            {"name":"name","type":"string"},
+            {"name":"code","type":"string(50)","nullable":true},
+            {"name":"manager_id","type":"unsignedBigInteger","nullable":true,"fk":"personels.id"},
+            {"name":"is_active","type":"boolean","default":true},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"},
+            {"name":"deleted_at","type":"timestamp","nullable":true}
+          ],
+          "indexes": [{"columns":["company_id","is_active"],"type":"index"}]
+        },
+        {
+          "name": "positions",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"company_id","type":"unsignedBigInteger","index":true,"fk":"companies.id"},
+            {"name":"title","type":"string"},
+            {"name":"code","type":"string(50)","nullable":true},
+            {"name":"salary_grade","type":"string(20)","nullable":true},
+            {"name":"level","type":"tinyInteger","default":1},
+            {"name":"description","type":"text","nullable":true},
+            {"name":"is_active","type":"boolean","default":true},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"},
+            {"name":"deleted_at","type":"timestamp","nullable":true}
+          ]
+        },
+        {
+          "name": "teams",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"department_id","type":"unsignedBigInteger","fk":"departments.id"},
+            {"name":"name","type":"string"},
+            {"name":"lead_id","type":"unsignedBigInteger","nullable":true,"fk":"personels.id"},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "personel",
+      "title": "Personel Yönetimi",
+      "tables": [
+        {
+          "name": "personels",
+          "purpose": "Ana personel tablosu — PII şifrelidir",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"company_id","type":"unsignedBigInteger","index":true,"fk":"companies.id"},
+            {"name":"first_name","type":"string"},
+            {"name":"last_name","type":"string"},
+            {"name":"email","type":"string","nullable":true,"index":true},
+            {"name":"phone","type":"string(20)","nullable":true},
+            {"name":"national_id_enc","type":"text","nullable":true,"notes":"PII: Laravel Crypt ile şifreli"},
+            {"name":"national_id_hash","type":"string(64)","nullable":true,"index":true,"notes":"SHA-256 hash — arama için"},
+            {"name":"birth_date","type":"date","nullable":true},
+            {"name":"gender","type":"enum(M,F,other)","nullable":true},
+            {"name":"blood_type","type":"string(5)","nullable":true},
+            {"name":"position_id","type":"unsignedBigInteger","nullable":true,"fk":"positions.id"},
+            {"name":"department_id","type":"unsignedBigInteger","nullable":true,"fk":"departments.id"},
+            {"name":"salary","type":"decimal(14,2)","nullable":true,"notes":"Hassas veri — erişim kısıtlı"},
+            {"name":"currency","type":"string(3)","default":"TRY"},
+            {"name":"hire_date","type":"date","nullable":true},
+            {"name":"termination_date","type":"date","nullable":true},
+            {"name":"status","type":"enum(active,terminated,on_leave,suspended)","default":"active","index":true},
+            {"name":"attributes","type":"json","nullable":true,"notes":"Dinamik şirket bazlı alanlar"},
+            {"name":"is_active","type":"boolean","default":true,"index":true},
+            {"name":"user_id","type":"unsignedBigInteger","nullable":true,"fk":"users.id"},
+            {"name":"created_by","type":"unsignedBigInteger","nullable":true,"fk":"users.id"},
+            {"name":"updated_by","type":"unsignedBigInteger","nullable":true,"fk":"users.id"},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"},
+            {"name":"deleted_at","type":"timestamp","nullable":true}
+          ],
+          "indexes": [
+            {"columns":["company_id","department_id","position_id"],"type":"index"},
+            {"columns":["company_id","is_active"],"type":"index"},
+            {"columns":["company_id","email"],"type":"index"}
+          ]
+        },
+        {
+          "name": "personel_documents",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"personel_id","type":"unsignedBigInteger","fk":"personels.id"},
+            {"name":"type","type":"string"},
+            {"name":"file_path","type":"string"},
+            {"name":"metadata","type":"json","nullable":true},
+            {"name":"issued_at","type":"date","nullable":true},
+            {"name":"expiry_at","type":"date","nullable":true},
+            {"name":"created_by","type":"unsignedBigInteger","nullable":true},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "izin",
+      "title": "İzin Yönetimi",
+      "tables": [
+        {
+          "name": "leave_types",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"company_id","type":"unsignedBigInteger","fk":"companies.id"},
+            {"name":"name","type":"string"},
+            {"name":"paid","type":"boolean","default":true},
+            {"name":"max_annual_days","type":"decimal(5,2)","nullable":true},
+            {"name":"accrual_rule","type":"json","nullable":true},
+            {"name":"requires_approval","type":"boolean","default":true},
+            {"name":"is_active","type":"boolean","default":true},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"},
+            {"name":"deleted_at","type":"timestamp","nullable":true}
+          ]
+        },
+        {
+          "name": "leave_balances",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"personel_id","type":"unsignedBigInteger","fk":"personels.id"},
+            {"name":"leave_type_id","type":"unsignedBigInteger","fk":"leave_types.id"},
+            {"name":"year","type":"year"},
+            {"name":"entitled_days","type":"decimal(5,2)","default":0},
+            {"name":"used_days","type":"decimal(5,2)","default":0},
+            {"name":"remaining_days","type":"decimal(5,2)","default":0},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"}
+          ],
+          "indexes": [
+            {"columns":["personel_id","leave_type_id","year"],"type":"unique"},
+            {"columns":["personel_id","year"],"type":"index"}
+          ]
+        },
+        {
+          "name": "leave_requests",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"company_id","type":"unsignedBigInteger","index":true,"fk":"companies.id"},
+            {"name":"personel_id","type":"unsignedBigInteger","fk":"personels.id"},
+            {"name":"leave_type_id","type":"unsignedBigInteger","fk":"leave_types.id"},
+            {"name":"start_date","type":"date"},
+            {"name":"end_date","type":"date"},
+            {"name":"total_days","type":"decimal(5,2)"},
+            {"name":"reason","type":"text","nullable":true},
+            {"name":"status","type":"enum(pending,approved,rejected,cancelled)","default":"pending","index":true},
+            {"name":"workflow","type":"json","nullable":true,"notes":"Onay adımları geçmişi"},
+            {"name":"approver_id","type":"unsignedBigInteger","nullable":true,"fk":"users.id"},
+            {"name":"approved_at","type":"timestamp","nullable":true},
+            {"name":"rejection_reason","type":"string","nullable":true},
+            {"name":"created_by","type":"unsignedBigInteger","nullable":true},
+            {"name":"created_at","type":"timestamp"},
+            {"name":"updated_at","type":"timestamp"},
+            {"name":"deleted_at","type":"timestamp","nullable":true}
+          ],
+          "indexes": [
+            {"columns":["company_id","personel_id","status"],"type":"index"},
+            {"columns":["company_id","start_date","end_date"],"type":"index"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "puantaj",
+      "title": "Puantaj / Time & Attendance",
+      "tables": [
+        {
+          "name": "time_records",
+          "purpose": "Giriş/çıkış kayıtları — büyük tablo, partition önerilir",
+          "partition": "RANGE PARTITION BY YEAR(recorded_at) — yıllık bölümleme",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"company_id","type":"unsignedBigInteger","index":true,"fk":"companies.id"},
+            {"name":"personel_id","type":"unsignedBigInteger","fk":"personels.id"},
+            {"name":"type","type":"enum(in,out,break_start,break_end)"},
+            {"name":"recorded_at","type":"datetime"},
+            {"name":"source","type":"enum(web,mobile,biometric,manual)","default":"web"},
+            {"name":"geo","type":"json","nullable":true},
+            {"name":"note","type":"text","nullable":true},
+            {"name":"created_by","type":"unsignedBigInteger","nullable":true},
+            {"name":"created_at","type":"timestamp"}
+          ],
+          "indexes": [
+            {"columns":["personel_id","recorded_at"],"type":"index"},
+            {"columns":["company_id","recorded_at"],"type":"index"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "audit",
+      "title": "Audit & Güvenlik Logları",
+      "tables": [
+        {
+          "name": "audit_logs",
+          "purpose": "Immutable aksiyon logları — softDeletes YOK",
+          "partition": "RANGE PARTITION BY YEAR(created_at) — monthly archive önerilir",
+          "columns": [
+            {"name":"id","type":"bigIncrements","pk":true},
+            {"name":"user_id","type":"unsignedBigInteger","nullable":true,"index":true,"fk":"users.id"},
+            {"name":"company_id","type":"unsignedBigInteger","nullable":true,"index":true,"fk":"companies.id"},
+            {"name":"action","type":"string(100)","index":true},
+            {"name":"model_type","type":"string(100)","nullable":true},
+            {"name":"model_id","type":"unsignedBigInteger","nullable":true},
+            {"name":"changes","type":"json","nullable":true},
+            {"name":"ip","type":"string(45)","nullable":true},
+            {"name":"user_agent","type":"string","nullable":true},
+            {"name":"impersonated_by","type":"unsignedBigInteger","nullable":true},
+            {"name":"created_at","type":"timestamp","default":"CURRENT_TIMESTAMP"}
+          ],
+          "indexes": [
+            {"columns":["model_type","model_id"],"type":"index"},
+            {"columns":["company_id","created_at"],"type":"index"}
+          ]
+        }
+      ]
+    }
+  ]
+}

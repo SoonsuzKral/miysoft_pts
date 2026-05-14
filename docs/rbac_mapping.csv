@@ -1,0 +1,212 @@
+role,permission,description
+super_admin,access_admin,Admin paneline erişim
+super_admin,dashboard.view,Dashboard görüntüleme
+super_admin,personel.view,Personel listeleme
+super_admin,personel.create,Yeni personel oluşturma
+super_admin,personel.update,Personel güncelleme
+super_admin,personel.delete,Personel silme
+super_admin,personel.export,Personel dışa aktarma
+super_admin,personel.import,Personel içe aktarma
+super_admin,personel.manage,Personel tam yönetim
+super_admin,leave.view,İzin listeleme
+super_admin,leave.request,İzin talebi oluşturma
+super_admin,leave.approve,İzin onaylama
+super_admin,leave.cancel,İzin iptal etme
+super_admin,leave.manage,İzin tam yönetim
+super_admin,attendance.view,Puantaj görüntüleme
+super_admin,attendance.create,Puantaj kaydı oluşturma
+super_admin,attendance.correct,Puantaj düzeltme
+super_admin,attendance.approve,Mesai onaylama
+super_admin,attendance.export,Puantaj dışa aktarma
+super_admin,shift.view,Vardiya görüntüleme
+super_admin,shift.create,Vardiya oluşturma
+super_admin,shift.assign,Vardiya atama
+super_admin,shift.manage,Vardiya tam yönetim
+super_admin,company.view,Şirket görüntüleme
+super_admin,company.manage,Şirket tam yönetim
+super_admin,department.view,Departman görüntüleme
+super_admin,department.create,Departman oluşturma
+super_admin,department.update,Departman güncelleme
+super_admin,department.delete,Departman silme
+super_admin,position.view,Pozisyon görüntüleme
+super_admin,position.create,Pozisyon oluşturma
+super_admin,position.update,Pozisyon güncelleme
+super_admin,position.delete,Pozisyon silme
+super_admin,asset.view,Envanter görüntüleme
+super_admin,asset.create,Envanter oluşturma
+super_admin,asset.update,Envanter güncelleme
+super_admin,asset.delete,Envanter silme
+super_admin,asset.assign,Zimmet atama
+super_admin,asset.manage,Envanter tam yönetim
+super_admin,advance.view,Avans görüntüleme
+super_admin,advance.request,Avans talebi
+super_admin,advance.approve,Avans onaylama
+super_admin,advance.manage,Avans tam yönetim
+super_admin,expense.view,Masraf görüntüleme
+super_admin,expense.request,Masraf talebi
+super_admin,expense.approve,Masraf onaylama
+super_admin,expense.manage,Masraf tam yönetim
+super_admin,travel.view,Seyahat görüntüleme
+super_admin,travel.request,Seyahat talebi
+super_admin,travel.approve,Seyahat onaylama
+super_admin,travel.manage,Seyahat tam yönetim
+super_admin,vehicle.view,Araç görüntüleme
+super_admin,vehicle.request,Araç rezervasyonu
+super_admin,vehicle.manage,Araç tam yönetim
+super_admin,visitor.view,Ziyaretçi görüntüleme
+super_admin,visitor.create,Ziyaretçi kaydı
+super_admin,visitor.manage,Ziyaretçi tam yönetim
+super_admin,report.view,Rapor görüntüleme
+super_admin,report.create,Rapor oluşturma
+super_admin,report.export,Rapor dışa aktarma
+super_admin,subscription.view,Abonelik görüntüleme
+super_admin,subscription.manage,Abonelik tam yönetim
+super_admin,settings.view,Ayarlar görüntüleme
+super_admin,settings.manage,Ayarlar tam yönetim
+super_admin,role.view,Rol görüntüleme
+super_admin,role.manage,Rol tam yönetim
+super_admin,permission.view,İzin görüntüleme
+super_admin,permission.manage,İzin tam yönetim
+super_admin,notification.manage,Bildirim yönetim
+company_admin,access_admin,Admin paneline erişim
+company_admin,dashboard.view,Dashboard görüntüleme
+company_admin,personel.view,Personel listeleme
+company_admin,personel.create,Yeni personel oluşturma
+company_admin,personel.update,Personel güncelleme
+company_admin,personel.delete,Personel silme
+company_admin,personel.export,Personel dışa aktarma
+company_admin,personel.import,Personel içe aktarma
+company_admin,personel.manage,Personel tam yönetim
+company_admin,leave.view,İzin listeleme
+company_admin,leave.request,İzin talebi oluşturma
+company_admin,leave.approve,İzin onaylama
+company_admin,leave.cancel,İzin iptal etme
+company_admin,leave.manage,İzin tam yönetim
+company_admin,attendance.view,Puantaj görüntüleme
+company_admin,attendance.create,Puantaj kaydı oluşturma
+company_admin,attendance.correct,Puantaj düzeltme
+company_admin,attendance.approve,Mesai onaylama
+company_admin,attendance.export,Puantaj dışa aktarma
+company_admin,shift.view,Vardiya görüntüleme
+company_admin,shift.create,Vardiya oluşturma
+company_admin,shift.assign,Vardiya atama
+company_admin,shift.manage,Vardiya tam yönetim
+company_admin,company.view,Şirket görüntüleme
+company_admin,company.manage,Şirket tam yönetim
+company_admin,department.view,Departman görüntüleme
+company_admin,department.create,Departman oluşturma
+company_admin,department.update,Departman güncelleme
+company_admin,department.delete,Departman silme
+company_admin,position.view,Pozisyon görüntüleme
+company_admin,position.create,Pozisyon oluşturma
+company_admin,position.update,Pozisyon güncelleme
+company_admin,position.delete,Pozisyon silme
+company_admin,asset.view,Envanter görüntüleme
+company_admin,asset.create,Envanter oluşturma
+company_admin,asset.update,Envanter güncelleme
+company_admin,asset.delete,Envanter silme
+company_admin,asset.assign,Zimmet atama
+company_admin,asset.manage,Envanter tam yönetim
+company_admin,advance.view,Avans görüntüleme
+company_admin,advance.approve,Avans onaylama
+company_admin,advance.manage,Avans tam yönetim
+company_admin,expense.view,Masraf görüntüleme
+company_admin,expense.approve,Masraf onaylama
+company_admin,expense.manage,Masraf tam yönetim
+company_admin,travel.view,Seyahat görüntüleme
+company_admin,travel.approve,Seyahat onaylama
+company_admin,travel.manage,Seyahat tam yönetim
+company_admin,vehicle.view,Araç görüntüleme
+company_admin,vehicle.manage,Araç tam yönetim
+company_admin,visitor.view,Ziyaretçi görüntüleme
+company_admin,visitor.create,Ziyaretçi kaydı
+company_admin,visitor.manage,Ziyaretçi tam yönetim
+company_admin,report.view,Rapor görüntüleme
+company_admin,report.create,Rapor oluşturma
+company_admin,report.export,Rapor dışa aktarma
+company_admin,subscription.view,Abonelik görüntüleme
+company_admin,settings.view,Ayarlar görüntüleme
+company_admin,settings.manage,Ayarlar tam yönetim
+company_admin,role.view,Rol görüntüleme
+company_admin,role.manage,Rol tam yönetim
+company_admin,notification.manage,Bildirim yönetim
+hr_manager,access_admin,Admin paneline erişim
+hr_manager,dashboard.view,Dashboard görüntüleme
+hr_manager,personel.view,Personel listeleme
+hr_manager,personel.create,Yeni personel oluşturma
+hr_manager,personel.update,Personel güncelleme
+hr_manager,personel.export,Personel dışa aktarma
+hr_manager,personel.import,Personel içe aktarma
+hr_manager,leave.view,İzin listeleme
+hr_manager,leave.request,İzin talebi oluşturma
+hr_manager,leave.approve,İzin onaylama
+hr_manager,leave.cancel,İzin iptal etme
+hr_manager,leave.manage,İzin tam yönetim
+hr_manager,attendance.view,Puantaj görüntüleme
+hr_manager,attendance.create,Puantaj kaydı oluşturma
+hr_manager,attendance.correct,Puantaj düzeltme
+hr_manager,attendance.approve,Mesai onaylama
+hr_manager,attendance.export,Puantaj dışa aktarma
+hr_manager,shift.view,Vardiya görüntüleme
+hr_manager,shift.create,Vardiya oluşturma
+hr_manager,shift.assign,Vardiya atama
+hr_manager,department.view,Departman görüntüleme
+hr_manager,department.create,Departman oluşturma
+hr_manager,department.update,Departman güncelleme
+hr_manager,position.view,Pozisyon görüntüleme
+hr_manager,position.create,Pozisyon oluşturma
+hr_manager,position.update,Pozisyon güncelleme
+hr_manager,asset.view,Envanter görüntüleme
+hr_manager,asset.assign,Zimmet atama
+hr_manager,advance.view,Avans görüntüleme
+hr_manager,advance.approve,Avans onaylama
+hr_manager,expense.view,Masraf görüntüleme
+hr_manager,expense.approve,Masraf onaylama
+hr_manager,travel.view,Seyahat görüntüleme
+hr_manager,travel.approve,Seyahat onaylama
+hr_manager,visitor.view,Ziyaretçi görüntüleme
+hr_manager,visitor.create,Ziyaretçi kaydı
+hr_manager,report.view,Rapor görüntüleme
+hr_manager,report.create,Rapor oluşturma
+hr_manager,report.export,Rapor dışa aktarma
+manager,access_admin,Admin paneline erişim
+manager,dashboard.view,Dashboard görüntüleme
+manager,personel.view,Personel listeleme (kendi departmanı)
+manager,leave.view,İzin görüntüleme
+manager,leave.approve,İzin onaylama (kendi ekibi)
+manager,attendance.view,Puantaj görüntüleme
+manager,attendance.approve,Mesai onaylama
+manager,shift.view,Vardiya görüntüleme
+manager,shift.assign,Vardiya atama
+manager,asset.view,Envanter görüntüleme
+manager,advance.view,Avans görüntüleme
+manager,advance.approve,Avans onaylama
+manager,expense.view,Masraf görüntüleme
+manager,expense.approve,Masraf onaylama
+manager,visitor.view,Ziyaretçi görüntüleme
+manager,report.view,Rapor görüntüleme
+finance,access_admin,Admin paneline erişim
+finance,dashboard.view,Dashboard görüntüleme
+finance,advance.view,Avans görüntüleme
+finance,advance.approve,Avans onaylama
+finance,advance.manage,Avans tam yönetim
+finance,expense.view,Masraf görüntüleme
+finance,expense.approve,Masraf onaylama
+finance,expense.manage,Masraf tam yönetim
+finance,subscription.view,Abonelik görüntüleme
+finance,subscription.manage,Abonelik tam yönetim
+finance,report.view,Rapor görüntüleme
+finance,report.export,Rapor dışa aktarma
+employee,dashboard.view,Dashboard görüntüleme (kısıtlı)
+employee,leave.view,Kendi izin geçmişi
+employee,leave.request,İzin talebi oluşturma
+employee,leave.cancel,Kendi iznini iptal etme
+employee,attendance.view,Kendi puantaj kaydı
+employee,advance.request,Avans talebi oluşturma
+employee,expense.request,Masraf talebi oluşturma
+employee,travel.request,Seyahat talebi oluşturma
+employee,vehicle.request,Araç rezervasyonu
+viewer,access_admin,Admin paneline erişim (salt okunur)
+viewer,dashboard.view,Dashboard görüntüleme
+viewer,personel.view,Personel listeleme (salt okunur)
+viewer,report.view,Rapor görüntüleme

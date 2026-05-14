@@ -1,0 +1,331 @@
+---
+title: MİYSOFT PTS — Entity Relationship Diagram
+---
+erDiagram
+    companies {
+        bigint id PK
+        string name
+        string domain UK
+        string tax_number
+        string phone
+        string email
+        string timezone
+        string locale
+        string status
+        json settings
+        timestamp created_at
+        timestamp deleted_at
+    }
+
+    users {
+        bigint id PK
+        bigint company_id FK
+        string name
+        string email UK
+        string password
+        boolean is_active
+        datetime last_login_at
+        json settings
+        timestamp created_at
+        timestamp deleted_at
+    }
+
+    roles {
+        bigint id PK
+        string name UK
+        string guard_name
+        string description
+    }
+
+    permissions {
+        bigint id PK
+        string name UK
+        string module
+        string guard_name
+    }
+
+    model_has_roles {
+        bigint role_id FK
+        string model_type
+        bigint model_id
+    }
+
+    role_has_permissions {
+        bigint role_id FK
+        bigint permission_id FK
+    }
+
+    departments {
+        bigint id PK
+        bigint company_id FK
+        bigint parent_department_id FK
+        string name
+        string code
+        bigint manager_id FK
+        boolean is_active
+        timestamp deleted_at
+    }
+
+    positions {
+        bigint id PK
+        bigint company_id FK
+        string title
+        string code
+        string salary_grade
+        tinyint level
+        boolean is_active
+    }
+
+    teams {
+        bigint id PK
+        bigint department_id FK
+        string name
+        bigint lead_id FK
+    }
+
+    personels {
+        bigint id PK
+        bigint company_id FK
+        string first_name
+        string last_name
+        string email
+        string phone
+        text national_id_enc "ENCRYPTED PII"
+        string national_id_hash "index for lookup"
+        date birth_date
+        enum gender
+        bigint position_id FK
+        bigint department_id FK
+        decimal salary
+        date hire_date
+        enum status
+        json attributes
+        boolean is_active
+        timestamp deleted_at
+    }
+
+    personel_documents {
+        bigint id PK
+        bigint personel_id FK
+        string type
+        string file_path
+        json metadata
+        date issued_at
+        date expiry_at
+    }
+
+    certifications {
+        bigint id PK
+        bigint personel_id FK
+        string name
+        string issuer
+        date issue_date
+        date expiry_date
+        string file_path
+    }
+
+    leave_types {
+        bigint id PK
+        bigint company_id FK
+        string name
+        boolean paid
+        decimal max_annual_days
+        json accrual_rule
+        boolean requires_approval
+    }
+
+    leave_balances {
+        bigint id PK
+        bigint personel_id FK
+        bigint leave_type_id FK
+        year year
+        decimal entitled_days
+        decimal used_days
+        decimal remaining_days
+    }
+
+    leave_requests {
+        bigint id PK
+        bigint company_id FK
+        bigint personel_id FK
+        bigint leave_type_id FK
+        date start_date
+        date end_date
+        decimal total_days
+        enum status
+        json workflow
+        bigint approver_id FK
+        timestamp approved_at
+    }
+
+    time_records {
+        bigint id PK
+        bigint company_id FK
+        bigint personel_id FK
+        enum type
+        datetime recorded_at
+        enum source
+        json geo
+        text note
+    }
+
+    overtime_requests {
+        bigint id PK
+        bigint company_id FK
+        bigint personel_id FK
+        datetime from
+        datetime to
+        decimal hours
+        enum status
+        bigint approver_id FK
+    }
+
+    shifts {
+        bigint id PK
+        bigint company_id FK
+        string name
+        time start_time
+        time end_time
+        json breaks
+        boolean is_night_shift
+    }
+
+    shift_plans {
+        bigint id PK
+        bigint company_id FK
+        string name
+        json pattern
+    }
+
+    shift_assignments {
+        bigint id PK
+        bigint shift_plan_id FK
+        bigint personel_id FK
+        bigint shift_id FK
+        date date
+    }
+
+    holidays {
+        bigint id PK
+        bigint company_id FK
+        string country_code
+        string name
+        date date
+        json recurrence_rule
+    }
+
+    asset_types {
+        bigint id PK
+        bigint company_id FK
+        string name
+        json attributes_schema
+    }
+
+    assets {
+        bigint id PK
+        bigint company_id FK
+        bigint asset_type_id FK
+        string name
+        string serial
+        string barcode
+        date purchase_date
+        date warranty_end
+        decimal price
+        enum status
+        bigint assigned_to FK
+    }
+
+    asset_assignments {
+        bigint id PK
+        bigint asset_id FK
+        bigint personel_id FK
+        timestamp assigned_at
+        timestamp returned_at
+        string condition
+    }
+
+    visitors {
+        bigint id PK
+        bigint company_id FK
+        string name
+        bigint host_personel_id FK
+        text document_no_enc "ENCRYPTED PII"
+        timestamp visit_date
+        timestamp checkin_at
+        timestamp checkout_at
+        boolean badge_printed
+    }
+
+    audit_logs {
+        bigint id PK
+        bigint user_id FK
+        bigint company_id FK
+        string action
+        string model_type
+        bigint model_id
+        json changes
+        string ip
+        timestamp created_at
+    }
+
+    media {
+        bigint id PK
+        bigint company_id FK
+        string model_type
+        bigint model_id
+        string disk
+        string path
+        string filename
+        string mime
+        int size
+        json metadata
+    }
+
+    exports {
+        bigint id PK
+        bigint company_id FK
+        bigint user_id FK
+        string module
+        json parameters
+        string file_path
+        enum status
+        timestamp finished_at
+        int rows_count
+    }
+
+    %% ─── Relations ──────────────────────────────────────────────
+    companies ||--o{ users : "has many"
+    companies ||--o{ departments : "has many"
+    companies ||--o{ positions : "has many"
+    companies ||--o{ personels : "has many"
+    companies ||--o{ leave_types : "has many"
+    companies ||--o{ shifts : "has many"
+    companies ||--o{ asset_types : "has many"
+    companies ||--o{ visitors : "has many"
+
+    departments ||--o{ departments : "parent"
+    departments ||--o{ personels : "belongs to"
+    departments ||--o{ teams : "has many"
+    positions ||--o{ personels : "belongs to"
+
+    personels ||--o{ personel_documents : "has many"
+    personels ||--o{ certifications : "has many"
+    personels ||--o{ leave_requests : "has many"
+    personels ||--o{ leave_balances : "has many"
+    personels ||--o{ time_records : "has many"
+    personels ||--o{ overtime_requests : "has many"
+    personels ||--o{ shift_assignments : "has many"
+    personels ||--o{ asset_assignments : "has many"
+    personels ||--o| assets : "currently assigned"
+
+    leave_types ||--o{ leave_requests : "has many"
+    leave_types ||--o{ leave_balances : "has many"
+
+    shifts ||--o{ shift_assignments : "has many"
+    shift_plans ||--o{ shift_assignments : "has many"
+
+    asset_types ||--o{ assets : "has many"
+    assets ||--o{ asset_assignments : "has many"
+
+    users }o--o{ roles : "model_has_roles"
+    roles }o--o{ permissions : "role_has_permissions"
