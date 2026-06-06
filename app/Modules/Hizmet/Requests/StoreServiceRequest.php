@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Modules\Hizmet\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreServiceRequest extends FormRequest
+{
+    public function authorize(): bool { return true; }
+
+    public function rules(): array
+    {
+        return [
+            'name'        => 'required|string|max:191',
+            'description' => 'nullable|string|max:2000',
+            'is_active'   => 'nullable|boolean',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Hizmet adı zorunludur.',
+        ];
+    }
+}

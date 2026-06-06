@@ -11,7 +11,7 @@
                         <p class="text-[10px] text-[#02E0FB] font-semibold tracking-widest uppercase">Personel Takip Sistemi</p>
                     </div>
                 </div>
-                <p class="text-gray-400 text-sm leading-relaxed mb-6">Türkiye'nin en kapsamlı bulut tabanlı İK ve personel yönetim platformu.</p>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">{{ $footer_desc ?? 'Türkiye\'nin en kapsamlı bulut tabanlı İK ve personel yönetim platformu.' }}</p>
             </div>
             <div>
                 <h4 class="text-white font-bold text-sm uppercase tracking-wider mb-5">Ürün</h4>
@@ -39,7 +39,7 @@
             </div>
         </div>
         <div class="pt-8 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p class="text-gray-500 text-sm">&copy; {{ now()->year }} MİYSOFT Teknoloji A.Ş. Tüm hakları saklıdır.</p>
+            <p class="text-gray-500 text-sm">{{ $footer_copyright ?? '&copy; ' . now()->year . ' MİYSOFT Teknoloji A.Ş. Tüm hakları saklıdır.' }}</p>
             <div class="flex items-center gap-4 text-xs text-gray-600">
                 <span>🇹🇷 Türkiye'de Üretilmiştir</span>
                 <span>•</span>

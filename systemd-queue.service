@@ -1,0 +1,57 @@
+# /etc/systemd/system/miysoft-queue@.service
+# Usage: sudo systemctl enable --now miysoft-queue@default miysoft-queue@exports miysoft-queue@reports miysoft-queue@notifications miysoft-queue@emails
+
+[Unit]
+Description=Miysoft PTS Queue Worker (%i)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/miysoft_pts
+ExecStart=/usr/bin/php /var/www/miysoft_pts/artisan queue:work --queue=%i --sleep=3 --tries=3 --max-time=3600 --memory=256
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/www/miysoft_pts/storage/logs/queue-%i.log
+StandardError=append:/var/www/miysoft_pts/storage/logs/queue-%i-error.log
+
+# Resource limits
+LimitNOFILE=65536
+MemoryLimit=512M
+
+[Install]
+WantedBy=multi-user.target
+
+# ============================================
+# /etc/systemd/system/miysoft-scheduler.service
+
+[Unit]
+Description=Miysoft PTS Scheduler
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/miysoft_pts
+ExecStart=/usr/bin/php /var/www/miysoft_pts/artisan schedule:run
+StandardOutput=append:/var/www/miysoft_pts/storage/logs/scheduler.log
+StandardError=append:/var/www/miysoft_pts/storage/logs/scheduler-error.log
+
+[Install]
+WantedBy=multi-user.target
+
+# ============================================
+# /etc/systemd/system/miysoft-scheduler.timer
+
+[Unit]
+Description=Run Miysoft Scheduler every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

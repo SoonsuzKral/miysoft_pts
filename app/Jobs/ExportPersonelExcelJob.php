@@ -17,6 +17,7 @@ class ExportPersonelExcelJob implements ShouldQueue
 
     public int $tries = 3;
     public int $timeout = 300;
+    public string $queue = 'exports';
 
     public function __construct(
         public readonly int   $companyId,
@@ -61,10 +62,12 @@ class ExportPersonelExcelJob implements ShouldQueue
 
             $rows = $query->get();
 
-            // CSV oluştur (SpreadsheetWriter kullanılabilir — VARSAYIM: CSV export)
-            $csvContent = "ID,Ad,Soyad,E-posta,Telefon,İşe Giriş,Durum,Departman,Pozisyon\n";
+            // CSV oluştur
+            $handle = fopen('php://temp', 'r+');
+            fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
+            fputcsv($handle, ['ID', 'Ad', 'Soyad', 'E-posta', 'Telefon', 'İşe Giriş', 'Durum', 'Departman', 'Pozisyon'], ';');
             foreach ($rows as $row) {
-                $csvContent .= implode(',', [
+                fputcsv($handle, [
                     $row->id,
                     $row->first_name,
                     $row->last_name,
@@ -74,8 +77,11 @@ class ExportPersonelExcelJob implements ShouldQueue
                     $row->status,
                     $row->department ?? '',
                     $row->position ?? '',
-                ]) . "\n";
+                ], ';');
             }
+            rewind($handle);
+            $csvContent = stream_get_contents($handle);
+            fclose($handle);
 
             $path = "exports/personel_{$this->companyId}_" . now()->format('YmdHis') . '.csv';
             Storage::put($path, $csvContent);

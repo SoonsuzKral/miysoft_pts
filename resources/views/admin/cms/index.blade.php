@@ -29,6 +29,8 @@
         ['features','⚡ Özellikler'],
         ['contact','📞 İletişim'],
         ['about','ℹ️ Hakkımızda'],
+        ['footer','📌 Footer'],
+        ['legal','⚖️ Yasal Sayfalar'],
         ['blog','📝 Blog'],
         ['partners','🤝 İş Ortakları'],
     ] as [$key,$label])
@@ -121,6 +123,29 @@
     </div>
 </div>
 
+{{-- Footer Editor --}}
+<div id="section-footer" class="cms-section hidden">
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-6">Footer İçerikleri</h3>
+        <div id="footer-fields"></div>
+        <div class="flex justify-end mt-6">
+            <button onclick="saveSection('footer')" class="px-6 py-2.5 text-sm font-semibold text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg transition-colors">💾 Kaydet</button>
+        </div>
+    </div>
+</div>
+
+{{-- Legal Pages Editor --}}
+<div id="section-legal" class="cms-section hidden">
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Yasal Sayfalar</h3>
+        <p class="text-sm text-gray-500 mb-6">KVKK, Gizlilik Politikası ve Kullanım Şartları sayfalarının içeriklerini düzenleyin.</p>
+        <div id="legal-fields"></div>
+        <div class="flex justify-end mt-6">
+            <button onclick="saveSection('legal')" class="px-6 py-2.5 text-sm font-semibold text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg transition-colors">💾 Kaydet</button>
+        </div>
+    </div>
+</div>
+
 {{-- Partners Editor --}}
 <div id="section-partners" class="cms-section hidden">
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -185,6 +210,21 @@ const SECTIONS = {
         { key: 'about.content', label: 'İçerik',    type: 'html' },
         { key: 'about.vision',  label: 'Vizyon',    type: 'textarea' },
         { key: 'about.mission', label: 'Misyon',    type: 'textarea' },
+    ],
+    footer: [
+        { key: 'footer.description',   label: 'Açıklama Metni', type: 'textarea' },
+        { key: 'footer.copyright',     label: 'Telif Hakkı Metni', type: 'text' },
+        { key: 'footer.email',         label: 'İletişim E-posta', type: 'text' },
+        { key: 'footer.phone',         label: 'Telefon', type: 'text' },
+        { key: 'footer.address',       label: 'Adres', type: 'textarea' },
+        { key: 'footer.social.twitter', label: 'Twitter/X URL', type: 'url' },
+        { key: 'footer.social.linkedin', label: 'LinkedIn URL', type: 'url' },
+        { key: 'footer.social.instagram', label: 'Instagram URL', type: 'url' },
+    ],
+    legal: [
+        { key: 'legal.kvkk',       label: 'KVKK Aydınlatma Metni', type: 'html' },
+        { key: 'legal.privacy',    label: 'Gizlilik Politikası', type: 'html' },
+        { key: 'legal.terms',      label: 'Kullanım Şartları', type: 'html' },
     ],
 };
 

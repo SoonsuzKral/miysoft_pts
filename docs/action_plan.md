@@ -1,7 +1,42 @@
-# MİYSOFT PTS — Action Plan
+﻿# MİYSOFT PTS — Action Plan
 
 **Proje:** MİYSOFT PTS
 **Tarih:** 2026-03-15
+**Son Güncelleme:** 2026-05-14
+
+---
+
+## Adım 11: Kritik Altyapı Onarımı (2026-05-14)
+**Amaç:** `authorize()` 500 hatası, sidebar layout bozukluğu ve çalışmayan modülleri düzeltmek.
+**Yapılanlar:**
+
+### Bug Fix 1 — Controller `authorize()` Hatası (KRİTİK)
+- **Sorun:** Laravel 12'de `AuthorizesRequests` trait base `Controller`'dan çıkarıldı. Tüm modül controller'larında `$this->authorize()` çağrısı `Call to undefined method` 500 hatasına yol açıyordu.
+- **Çözüm:** `app/Http/Controllers/Controller.php` içine `use Illuminate\Foundation\Auth\Access\AuthorizesRequests;` trait eklendi.
+
+### Bug Fix 2 — Admin Panel Layout & Sidebar Yeniden Tasarımı
+- **Sorun:** Sidebar `fixed top-16 lg:relative` kombinasyonu desktop'ta 64px dikey kayma yaratıyordu. Duplicate `id` attribute (`id="sidebar"` ve `id="sidebarEl"` aynı element). Mobile sidebar toggle JS hiç yoktu. `isActive()` fonksiyonu `@php` bloğunda her render'da redeclare hatası riski.
+- **Çözüm:**
+  - `layouts/app.blade.php` → `h-screen overflow-hidden flex` yapısına geçildi; footer geri eklendi.
+  - `partials/sidebar.blade.php` → Tam yeniden tasarım: `fixed inset-y-0 lg:static` pattern, duplicate id kaldırıldı, `isActive` closure'a çevrildi, professional dark theme (`#0F172A`), aktif item `bg-[#02E0FB]/15` tonu, bottom user bar.
+  - `partials/_sidebar_item.blade.php` → `$active` parametresi (dışarıdan önceden hesaplanmış) ile güncellendi.
+  - `partials/header.blade.php` → Alpine.js bağımlılığı kaldırıldı, saf JS ile dropdown; hamburger butonu düzeltildi.
+  - `partials/scripts.blade.php` → `toggleSidebar()`, `closeSidebar()`, `toggleUserMenu()` fonksiyonları eklendi; mobile overlay backdrop desteği.
+
+### Bug Fix 3 — `admin.leave.index` Rota Düzeltmesi
+- **Sorun:** `GET /admin/leave` → `LeaveRequestController@index` (JSON) bağlıydı; tarayıcıdan açıldığında ham JSON dönüyordu.
+- **Çözüm:** `routes/admin.php` → `indexView` metoduna yönlendirildi; eski `index` (JSON) `/list` path'ine taşındı.
+
+**Dosyalar Değiştirilen:**
+- `app/Http/Controllers/Controller.php`
+- `resources/views/layouts/app.blade.php`
+- `resources/views/partials/sidebar.blade.php`
+- `resources/views/partials/_sidebar_item.blade.php`
+- `resources/views/partials/header.blade.php`
+- `resources/views/partials/scripts.blade.php`
+- `routes/admin.php`
+
+---
 
 ---
 
@@ -149,3 +184,17 @@ Adım 1 (Kurulum)
               └─> Adım 9 (Tests)
                     └─> Adım 10 (Docs)
 ```
+
+## Adım 12: Kritik Hata Onarımı — Layout v2 + Null Safety (2026-05-14)
+
+### Backend Fix — scopeForCompany Null TypeError (TÜM MODÜLLER)
+- **Sorun:** company_id null olabilen (super_admin) kullanıcılar için 20 modelde int type hint TypeError veriyordu.
+- **Cozum:** ?int companyId yapildi; null geldiginde super_admin icin kisitlama yapilmaz.
+- **Etkilenen:** 20 model (LeaveType, LeaveRequest, Personel, TimeRecord, AdvanceRequest, ExpenseRequest, ExpenseCategory, Asset, AssetType, Announcement, Poll, Department, Position, Team, Shift, ShiftAssignment, ShiftPlan, ProcessTemplate, ProcessInstance, CompanySubscription, Invoice)
+
+### Frontend Fix — Admin Layout v2 (CSS-first)
+- **Sorun:** Tailwind arbitrary class'lar Windows build ortaminda CSS'e girmiyor, layout bozuluyordu.
+- **Cozum:** resources/css/app.css'e 300 satirlik admin layout CSS yazildi. CSS custom properties: --pts-brand, --pts-sidebar-bg vb.
+- **Yapi:** #admin-wrapper (flex) => #admin-sidebar + #admin-main => #admin-header + #admin-content
+- **CSS build:** app-TovAPEZK.css 87.49 kB
+

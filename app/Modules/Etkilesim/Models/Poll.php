@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 namespace App\Modules\Etkilesim\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -50,7 +50,7 @@ class Poll extends Model
         return $counts;
     }
 
-    public function scopeForCompany($query, int $companyId)
+    public function scopeForCompany($query, ?int $companyId)
     {
         return $query->where('company_id', $companyId);
     }

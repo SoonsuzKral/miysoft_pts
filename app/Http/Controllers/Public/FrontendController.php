@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
+use App\Mail\WelcomeMail;
 use App\Modules\CMS\Models\Content;
 use App\Modules\CMS\Models\Blog;
 use App\Modules\CMS\Models\BlogCategory;
@@ -13,7 +14,9 @@ use App\Modules\CMS\Models\PartnerLogo;
 use App\Modules\Abonelik\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class FrontendController extends Controller
 {
@@ -164,7 +167,45 @@ class FrontendController extends Controller
         }
         Auth::login($user);
 
+        // Hoş geldin e-postası gönder
+        try {
+            Mail::to($user->email)->queue(new WelcomeMail(
+                name: $user->name,
+                companyName: $company->name,
+                loginUrl: route('login'),
+                trialEndsAt: $company->trial_ends_at?->format('d.m.Y') ?? now()->addDays(14)->format('d.m.Y'),
+            ));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('WelcomeMail gönderilemedi: ' . $e->getMessage());
+        }
+
         return redirect()->route('admin.dashboard')
             ->with('success', '14 günlük ücretsiz denemeniz başlatıldı!');
+    }
+
+    public function legalPage(string $page)
+    {
+        $pages = ['kvkk', 'privacy', 'terms'];
+        $titles = [
+            'kvkk'    => 'KVKK Aydınlatma Metni',
+            'privacy' => 'Gizlilik Politikası',
+            'terms'   => 'Kullanım Şartları',
+        ];
+        $contentKeys = [
+            'kvkk'    => 'legal.kvkk',
+            'privacy' => 'legal.privacy',
+            'terms'   => 'legal.terms',
+        ];
+
+        if (!in_array($page, $pages)) {
+            abort(404);
+        }
+
+        $title = $titles[$page];
+        $content = Cache::remember("legal_{$page}", 3600, function () use ($contentKeys, $page) {
+            return Content::where('key', $contentKeys[$page])->value('value');
+        });
+
+        return view('frontend.legal', compact('title', 'content'));
     }
 }

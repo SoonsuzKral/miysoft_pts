@@ -1,0 +1,16 @@
+# AI Ignore Dosyası - Yapay Zeka Okuma İptalleri
+node_modules/
+vendor/
+public/build/
+storage/logs/
+storage/framework/
+.env
+.env.backup
+.git/
+tests/Browser/console/
+npm-debug.log
+yarn-error.log
+
+# Medya veya Yüklü Dosyalar (Opsiyonel ama mantıklı)
+storage/app/public/
+public/storage/

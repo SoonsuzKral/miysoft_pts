@@ -129,23 +129,31 @@ class AttendanceCalculatorService
 
         $workingDaysInMonth = collect($dailyResults)->filter(fn ($d) => !in_array($d['status'] ?? '', ['weekend', 'holiday']))->count();
 
+        $personel = \App\Modules\Personel\Models\Personel::find($personelId);
+
         return [
-            'personel_id'          => $personelId,
-            'year'                 => $year,
-            'month'                => $month,
-            'month_name'           => $startDate->locale('tr')->isoFormat('MMMM YYYY'),
-            'working_days_in_month'=> $workingDaysInMonth,
-            'present_days'         => $presentDays,
-            'missing_days'         => $missingDays,
-            'leave_days'           => $leaveDayCount,
-            'holiday_count'        => $holidayCount,
-            'total_work_hours'     => round($totalWorkMin / 60, 2),
-            'total_overtime_hours' => round($totalOvertimeMin / 60, 2),
-            'total_late_minutes'   => $totalLateMin,
-            'total_missing_hours'  => round($totalMissingMin / 60, 2),
-            'efficiency_pct'       => $workingDaysInMonth > 0
+            'personel_id'            => $personelId,
+            'personel_name'          => $personel ? $personel->first_name . ' ' . $personel->last_name : null,
+            'year'                   => $year,
+            'month'                  => $month,
+            'month_name'             => $startDate->locale('tr')->isoFormat('MMMM YYYY'),
+            'working_days_in_month'  => $workingDaysInMonth,
+            'present_days'           => $presentDays,
+            'missing_days'           => $missingDays,
+            'total_work_days'        => $presentDays,
+            'absent_days'            => $missingDays,
+            'leave_days'             => $leaveDayCount,
+            'holiday_count'          => $holidayCount,
+            'total_work_hours'       => round($totalWorkMin / 60, 2),
+            'total_overtime_hours'   => round($totalOvertimeMin / 60, 2),
+            'total_overtime_minutes' => $totalOvertimeMin,
+            'total_late_minutes'     => $totalLateMin,
+            'total_missing_hours'    => round($totalMissingMin / 60, 2),
+            'avg_work_hours'         => $presentDays > 0
+                ? round(($totalWorkMin / 60) / $presentDays, 2) : 0,
+            'efficiency_pct'         => $workingDaysInMonth > 0
                 ? round(($presentDays / $workingDaysInMonth) * 100, 1) : 0,
-            'daily'                => $dailyResults,
+            'daily'                  => $dailyResults,
         ];
     }
 

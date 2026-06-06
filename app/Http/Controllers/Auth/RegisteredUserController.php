@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
+use App\Mail\WelcomeMail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
@@ -66,6 +68,18 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+
+        // Hoş geldin e-postası gönder
+        try {
+            Mail::to($user->email)->queue(new WelcomeMail(
+                name: $user->name,
+                companyName: $company?->name ?? 'MİYSOFT PTS',
+                loginUrl: route('login'),
+                trialEndsAt: $company?->trial_ends_at?->format('d.m.Y') ?? '14 gün',
+            ));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('WelcomeMail gönderilemedi: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.dashboard');
     }

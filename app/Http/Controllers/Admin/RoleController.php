@@ -131,6 +131,42 @@ class RoleController extends Controller
         $role = Role::findOrFail($data['role_id']);
         $user->removeRole($role);
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         return response()->json(['success' => true, 'message' => 'Rol kaldırıldı.']);
+    }
+
+    /** Tüm kullanıcıları rollerle birlikte listele */
+    public function users(): JsonResponse
+    {
+        $this->authorize('role.view');
+
+        $companyId = auth()->user()->company_id;
+        $users = User::with('roles')
+            ->where('company_id', $companyId)
+            ->orderBy('name')
+            ->get()
+            ->map(fn($u) => [
+                'id'    => $u->id,
+                'name'  => $u->name,
+                'email' => $u->email,
+                'roles' => $u->getRoleNames(),
+            ]);
+
+        return response()->json(['data' => $users]);
+    }
+
+    /** Rolün kullanıcılarını getir */
+    public function usersByRole(Role $role): JsonResponse
+    {
+        $this->authorize('role.view');
+
+        $companyId = auth()->user()->company_id;
+        $users = User::where('company_id', $companyId)
+            ->role($role->name)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        return response()->json(['data' => $users]);
     }
 }

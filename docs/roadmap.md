@@ -9,6 +9,11 @@
 
 | Tarih | Yapılan İşlem |
 |-------|---------------|
+| 2026-05-29 | **Dual-mode Controller Fix:** CompanyController, DepartmentController `index()` metodları browser/AJAX dual-mode kazandı. Travel, Vehicle, Visitor, Service controller'ları placeholder'dan kurtarılıp dual-mode + gerçek Blade view'a kavuştu. |
+| 2026-05-29 | **Admin View'lar:** Travel, Vehicle, Visitor, Service modülleri için eksik full CRUD template view'lar oluşturuldu (eskiden "Yakında eklenecek" placeholder'ı vardı). |
+| 2026-05-30 | **Prompt #03 — Hata Tespiti & Toplu Düzeltme:** Companies view'da `$key` undefined hatası giderildi (foreach destructuring syntax'ı `@php` bloğuna taşındı). Departments view'da `$allDepartments` undefined hatası giderildi (PHP loop kaldırıldı, JS ile AJAX select doldurma eklendi). Travel, Vehicle, Visitor, Service view'ları temiz (AJAX-tabanlı, PHP değişkeni yok). |
+| 2026-05-30 | **Prompt #04 — Show() Method Hatası & Route Düzeltmesi:** Travel, Vehicle, Visitor, Service controller'larında `show()` metodu olmamasına rağmen `Route::resource()` tüm CRUD route'larını oluşturuyordu. `->only(['index'])` ile sadece var olan metodlara kısıtlandı. Aynı sorun Department (`show`) ve Position (`show`, `edit`) controller'ları için de düzeltildi (`->except()`). |
+| 2026-05-30 | **Prompt #05 — Dashboard Geliştirme + İK Modülleri:** Dashboard'a son 5 izin talebi, son 5 personel kaydı, haftalık vardiya özeti ve yaklaşan tatiller panelleri eklendi (widgetData AJAX + JS rendering). İzin (Leave), Puantaj (Attendance), Vardiya (Shift) ve Onboarding (Process) modülleri incelendi — tümü zaten çalışır durumda, ek müdahale gerekmedi. |
 | 2026-03-20 | **Auth & rol:** İlk kayıt olan kullanıcıya `super_admin`, sonrakilere `company_admin`; e-posta çakışması `back()->withErrors(['email' => 'Bu e-posta zaten kullanımda'])`. Ücretsiz deneme (`storeFreeTrial`) aynı zarif e-posta kontrolü; `unique` validation kaldırıldı. |
 | 2026-03-20 | **Rotalar:** `web.php` / `admin.php` yorumları — `auth` middleware'inin login/register'a bulaşmadığı netleştirildi. |
 | 2026-03-20 | **Vitrin hero:** `isolate`, `-z-10`, Tailwind `blur-3xl` / düşük opacity; “Yeniden Keşfedin” için `relative isolate` içinde sınırlı glow. |
@@ -103,6 +108,15 @@ php artisan tinker --execute="app(\App\Services\HolidayCheckerService::class)->s
 ### 9. Admin Panel İzin Entegrasyonu
 - [ ] `HolidayCheckerService` → İzin formu tarih seçerken AJAX tatil uyarısı
 - [ ] İzin takvimi view'u (`FullCalendar` bağlantısı zaten mevcut)
+
+### 9b. Controller Dual-mode Fix
+- [x] CompanyController — Browser/Ajax dual-mode (`index()` `wantsJson()` kontrolü eklendi)
+- [x] DepartmentController — Browser/Ajax dual-mode
+- [x] PositionController — Zaten dual-mode idi
+- [x] TravelController — Dual-mode + gerçek Blade view (placeholder kaldırıldı)
+- [x] VehicleController — Dual-mode + gerçek Blade view
+- [x] VisitorController — Dual-mode + gerçek Blade view
+- [x] ServiceController — Dual-mode + gerçek Blade view
 
 ---
 
@@ -218,7 +232,7 @@ php artisan queue:work --daemon --queue=default,notifications,exports
 | Süreç (Onboarding) | ✅ | 75% |
 | Frontend (Tanıtım sitesi) | ✅ CSS+Blog düzeltildi | 90% |
 | Authentication | ✅ TAMAMLANDI — Breeze, ilk kullanıcı `super_admin`, zarif e-posta hatası | 100% |
-| Admin Panel Views | ✅ Tüm rotalar view'a sahip | 98% |
+| Admin Panel Views | ✅ Tüm rotalar view'a sahip, dual-mode controller'lar | 100% |
 | Frontend CSS | ✅ TAMAMLANDI — Hero glow Tailwind/isolate, kart gölgeleri yumuşatıldı | 100% |
 | Blog Detay (Show) | ✅ TAMAMLANDI — `blog_show.blade.php`, başlık/tarih/yazar/CMS içerik | 100% |
 | Yetkilendirme (403/401) | ✅ TAMAMLANDI — `access_admin` gate, guest/auth rota ayrımı, Spatie roller | 100% |
@@ -227,7 +241,7 @@ php artisan queue:work --daemon --queue=default,notifications,exports
 | Raporlar | ⚠️ UI hazır, gerçek export eksik | 50% |
 | API Layer | ❌ Başlanmadı | 0% |
 | Testler | ⚠️ İskelet hazır | 20% |
-| **GENEL** | | **~88%** |
+| **GENEL** | | **~90%** |
 
 ---
 

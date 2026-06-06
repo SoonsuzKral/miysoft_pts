@@ -10,15 +10,16 @@
 
 @section('page_header')
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">Envanter & Zimmet</h1>
-        <p class="text-sm text-gray-500 mt-0.5">Şirket varlıklarını yönetin ve personele zimmetleyin.</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Envanter & Zimmet</h1>
+        <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Şirket varlıklarını yönetin ve personele zimmetleyin.</p>
     </div>
     <div class="flex items-center gap-2">
         @can('asset.create')
         <button onclick="openCreateAssetModal()"
-            class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#02E0FB] rounded-lg hover:bg-cyan-400 transition-colors shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Yeni Varlık
+            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-xl transition-all shadow-sm w-full sm:w-auto">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="hidden sm:inline">Yeni Varlık</span>
+            <span class="sm:hidden">Ekle</span>
         </button>
         @endcan
     </div>
@@ -27,22 +28,25 @@
 @section('content')
 
 {{-- KPI Özet --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5" id="assetKPIs">
-    @foreach([
-        ['label'=>'Toplam Varlık','id'=>'kpi-total','icon'=>'20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4','color'=>'cyan'],
-        ['label'=>'Müsait','id'=>'kpi-available','icon'=>'9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z','color'=>'green'],
-        ['label'=>'Zimmetli','id'=>'kpi-assigned','icon'=>'16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z','color'=>'blue'],
-        ['label'=>'Garanti Bitiyor','id'=>'kpi-warranty','icon'=>'12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z','color'=>'yellow'],
-    ] as $kpi)
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-{{ $kpi['color'] }}-50 flex items-center justify-center shrink-0">
-            <svg class="w-5 h-5 text-{{ $kpi['color'] }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+@php
+$kpiCards = [
+    ['label'=>'Toplam Varlık','id'=>'kpi-total','icon'=>'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4','bg'=>'bg-cyan-50','text'=>'text-cyan-600'],
+    ['label'=>'Müsait','id'=>'kpi-available','icon'=>'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z','bg'=>'bg-green-50','text'=>'text-green-600'],
+    ['label'=>'Zimmetli','id'=>'kpi-assigned','icon'=>'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z','bg'=>'bg-blue-50','text'=>'text-blue-600'],
+    ['label'=>'Garanti Bitiyor','id'=>'kpi-warranty','icon'=>'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z','bg'=>'bg-yellow-50','text'=>'text-yellow-600'],
+];
+@endphp
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5" id="assetKPIs">
+    @foreach($kpiCards as $kpi)
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-3 sm:p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl {{ $kpi['bg'] }} flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 {{ $kpi['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $kpi['icon'] }}"/>
             </svg>
         </div>
-        <div>
+        <div class="min-w-0">
             <p class="text-xs text-gray-500">{{ $kpi['label'] }}</p>
-            <p class="text-2xl font-bold text-gray-900" id="{{ $kpi['id'] }}">—</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900" id="{{ $kpi['id'] }}">—</p>
         </div>
     </div>
     @endforeach
@@ -158,6 +162,18 @@
     </div>
 </div>
 
+{{-- Global Modal (Create/Edit) --}}
+<div id="globalModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 relative">
+        <button onclick="document.getElementById('globalModal').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-4">—</h3>
+        <div id="modalBody"></div>
+        <div id="modalFooter" class="flex justify-end gap-3 mt-5 pt-4 border-t border-gray-100"></div>
+    </div>
+</div>
+
 {{-- İade Modal --}}
 <div id="returnAssetModal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/50" onclick="document.getElementById('returnAssetModal').classList.add('hidden')"></div>
@@ -186,24 +202,47 @@
     </div>
 </div>
 
+{{-- Varlık Türü Ekle Modal --}}
+<div id="assetTypeModal" class="hidden fixed inset-0 z-[120] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" onclick="closeAssetTypeModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10 p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Yeni Varlık Türü</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tür Adı <span class="text-red-500">*</span></label>
+                <input type="text" id="assetTypeName" placeholder="Örn: Dizüstü Bilgisayar"
+                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-5">
+            <button onclick="closeAssetTypeModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">İptal</button>
+            <button onclick="storeAssetType()" class="px-4 py-2 text-sm text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg font-medium">Kaydet</button>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
 const ASSET_URLS = {
-    list:    '{{ route("admin.assets.index") }}',
-    create:  '{{ route("admin.assets.create") }}',
-    store:   '{{ route("admin.assets.store") }}',
-    edit:    id => `/admin/assets/${id}/edit`,
-    update:  id => `/admin/assets/${id}`,
-    destroy: id => `/admin/assets/${id}`,
-    assign:  id => `/admin/assets/${id}/assign`,
-    return:  id => `/admin/assets/${id}/return`,
-    history: id => `/admin/assets/${id}/history`,
-    zimmetPdf: id => `/admin/assets/assignments/${id}/pdf`,
+    list:       '{{ route("admin.assets.list") }}',
+    create:     '{{ route("admin.assets.create") }}',
+    store:      '{{ route("admin.assets.store") }}',
+    edit:       id => `/admin/assets/${id}/edit`,
+    update:     id => `/admin/assets/${id}`,
+    destroy:    id => `/admin/assets/${id}`,
+    assign:     id => `/admin/assets/${id}/assign`,
+    return:     id => `/admin/assets/${id}/return`,
+    history:    id => `/admin/assets/${id}/history`,
+    zimmetPdf:  id => `/admin/assets/assignments/${id}/pdf`,
+    genSerial:  '{{ route("admin.assets.generate-serial") }}',
+    genBarcode: '{{ route("admin.assets.generate-barcode") }}',
+    storeType:  '{{ route("admin.assets.types.store") }}',
 };
 
 let activeAssetId = null;
+let activeAssignmentId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadAssets();
@@ -213,16 +252,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function loadKPIs() {
     ['', 'available', 'assigned'].forEach(status => {
         const id = status ? `kpi-${status}` : 'kpi-total';
-        axios.get(ASSET_URLS.list, { params: { status, per_page: 1 } }).then(res => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = res.data.total;
-        });
+        axios.get(ASSET_URLS.list, { params: { status, per_page: 1 } })
+            .then(res => { const el = document.getElementById(id); if (el) el.textContent = res.data.total; })
+            .catch(() => { document.getElementById(id).textContent = '0'; });
     });
-    // Garanti bitiyor
-    axios.get(ASSET_URLS.list, { params: { warranty_expiring: 1, per_page: 1 } }).then(res => {
-        const el = document.getElementById('kpi-warranty');
-        if (el) el.textContent = res.data.total;
-    }).catch(() => {});
+    axios.get(ASSET_URLS.list, { params: { warranty_expiring: 1, per_page: 1 } })
+        .then(res => { const el = document.getElementById('kpi-warranty'); if (el) el.textContent = res.data.total; })
+        .catch(() => {});
 }
 
 function loadAssets(page = 1) {
@@ -234,7 +270,9 @@ function loadAssets(page = 1) {
         personel_id:   document.getElementById('assetPersonelFilter').value,
         per_page: 20,
     };
-    axios.get(ASSET_URLS.list, { params }).then(res => renderAssetTable(res.data));
+    axios.get(ASSET_URLS.list, { params }).then(res => renderAssetTable(res.data)).catch(() => {
+        document.getElementById('assetTableBody').innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-red-400 text-sm">Veri yüklenemedi.</td></tr>';
+    });
 }
 
 const statusMap = {
@@ -317,6 +355,57 @@ function openCreateAssetModal() {
             <button onclick="document.getElementById('globalModal').classList.add('hidden')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">İptal</button>
             <button onclick="submitAssetForm()" class="px-4 py-2 text-sm text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg font-medium">Kaydet</button>`;
         document.getElementById('globalModal').classList.remove('hidden');
+        generateSerialField();
+        generateBarcodeField();
+    }).catch(() => toast('error', 'Form yüklenemedi.'));
+}
+
+function generateSerialField() {
+    axios.get(ASSET_URLS.genSerial).then(res => {
+        const el = document.getElementById('serialInput');
+        if (el) el.value = res.data.serial;
+    }).catch(() => {});
+}
+
+function generateBarcodeField() {
+    axios.get(ASSET_URLS.genBarcode).then(res => {
+        const el = document.getElementById('barcodeInput');
+        if (el) el.value = res.data.barcode;
+    }).catch(() => {});
+}
+
+function openCreateAssetTypeModal() {
+    document.getElementById('assetTypeName').value = '';
+    document.getElementById('assetTypeModal').classList.remove('hidden');
+    document.getElementById('assetTypeName').focus();
+}
+
+function closeAssetTypeModal() {
+    document.getElementById('assetTypeModal').classList.add('hidden');
+}
+
+function storeAssetType() {
+    const name = document.getElementById('assetTypeName').value.trim();
+    if (!name) { toast('warning', 'Tür adı zorunludur.'); return; }
+    axios.post(ASSET_URLS.storeType, { name }).then(res => {
+        closeAssetTypeModal();
+        toast('success', res.data.message || 'Varlık türü oluşturuldu.');
+        const opt = document.createElement('option');
+        opt.value = res.data.data.id;
+        opt.textContent = res.data.data.name;
+        opt.selected = true;
+        const sel = document.getElementById('assetTypeSelect');
+        if (sel) { sel.appendChild(opt); sel.value = res.data.data.id; }
+        const filter = document.getElementById('assetTypeFilter');
+        if (filter) { const fo = document.createElement('option'); fo.value = res.data.data.id; fo.textContent = res.data.data.name; filter.appendChild(fo); }
+    }).catch(err => {
+        const msg = err.response?.data?.message || err.response?.data?.error || 'Kaydedilemedi.';
+        if (err.response?.data?.errors) {
+            const first = Object.values(err.response.data.errors).flat()[0];
+            toast('error', first);
+        } else {
+            toast('error', msg);
+        }
     });
 }
 
@@ -328,17 +417,26 @@ function openEditAssetModal(id) {
             <button onclick="document.getElementById('globalModal').classList.add('hidden')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">İptal</button>
             <button onclick="submitAssetForm('${ASSET_URLS.update(id)}','PUT')" class="px-4 py-2 text-sm text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg font-medium">Güncelle</button>`;
         document.getElementById('globalModal').classList.remove('hidden');
-    });
+    }).catch(() => toast('error', 'Varlık bilgileri yüklenemedi.'));
 }
 
 function submitAssetForm(url = ASSET_URLS.store, method = 'POST') {
     const form = document.getElementById('assetForm');
+    if (!form) return;
     const data = Object.fromEntries(new FormData(form).entries());
     axios({ method, url, data }).then(res => {
         document.getElementById('globalModal').classList.add('hidden');
         toast('success', res.data.message);
         loadAssets();
         loadKPIs();
+    }).catch(err => {
+        const msg = err.response?.data?.message || err.response?.data?.error || 'Kaydedilemedi.';
+        if (err.response?.data?.errors) {
+            const first = Object.values(err.response.data.errors).flat()[0];
+            toast('error', first);
+        } else {
+            toast('error', msg);
+        }
     });
 }
 
@@ -365,10 +463,25 @@ function submitAssignment() {
         condition:   document.getElementById('assignCondition').value,
         notes:       document.getElementById('assignNotes').value,
     }).then(res => {
+        activeAssignmentId = res.data.assignment?.id;
         closeAssignModal();
-        toast('success', res.data.message);
         loadAssets();
         loadKPIs();
+        if (activeAssignmentId) {
+            Swal.fire({
+                icon: 'success', title: 'Zimmetlendi!',
+                text: res.data.message,
+                showCancelButton: true,
+                confirmButtonText: 'Zimmet Belgesini İndir',
+                cancelButtonText: 'Tamam',
+                confirmButtonColor: '#02E0FB',
+            }).then(r => { if (r.isConfirmed) window.open(ASSET_URLS.zimmetPdf(activeAssignmentId), '_blank'); });
+        } else {
+            toast('success', res.data.message);
+        }
+    }).catch(err => {
+        const msg = err.response?.data?.message || err.response?.data?.error || 'Zimmetleme başarısız.';
+        toast('error', msg);
     });
 }
 
@@ -389,14 +502,15 @@ function submitReturn() {
         loadAssets();
         loadKPIs();
         activeAssetId = null;
+    }).catch(err => {
+        const msg = err.response?.data?.message || err.response?.data?.error || 'İade alınamadı.';
+        toast('error', msg);
     });
 }
 
 function downloadZimmet() {
-    if (!activeAssetId) return;
-    axios.get(ASSET_URLS.zimmetPdf(activeAssetId)).then(res => {
-        toast('info', res.data.message);
-    });
+    if (!activeAssignmentId) { toast('warning', 'Önce zimmetleme işlemini tamamlayın.'); return; }
+    window.open(ASSET_URLS.zimmetPdf(activeAssignmentId), '_blank');
 }
 </script>
 @endpush

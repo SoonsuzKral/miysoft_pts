@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 namespace App\Modules\Abonelik\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -54,7 +54,7 @@ class Invoice extends Model
         };
     }
 
-    public function scopeForCompany($query, int $companyId)
+    public function scopeForCompany($query, ?int $companyId)
     {
         return $query->where('company_id', $companyId);
     }

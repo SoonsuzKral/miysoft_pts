@@ -22,10 +22,10 @@ Route::prefix('blog')->name('blog.')->group(function () {
     Route::get('/{slug}', [FrontendController::class, 'blogShow'])->name('show');
 });
 
-// Legal Pages
-Route::get('/gizlilik-politikasi', fn() => view('frontend.legal', ['title' => 'Gizlilik Politikası']))->name('privacy');
-Route::get('/kullanim-sartlari', fn() => view('frontend.legal', ['title' => 'Kullanım Şartları']))->name('terms');
-Route::get('/kvkk', fn() => view('frontend.legal', ['title' => 'KVKK Aydınlatma Metni']))->name('kvkk');
+// Legal Pages (CMS yönetilebilir)
+Route::get('/kvkk', [FrontendController::class, 'legalPage'])->defaults('page', 'kvkk')->name('kvkk');
+Route::get('/gizlilik-politikasi', [FrontendController::class, 'legalPage'])->defaults('page', 'privacy')->name('privacy');
+Route::get('/kullanim-sartlari', [FrontendController::class, 'legalPage'])->defaults('page', 'terms')->name('terms');
 
 // ─── Auth (Laravel Breeze) ────────────────────────────────────────────────────
 require __DIR__ . '/auth.php';
@@ -36,6 +36,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// ─── QR Giriş/Çıkış (Public — auth gerekmez) ─────────────────────────────────
+Route::prefix('qr')->name('qr.')->group(function () {
+    Route::get('/scan/{token}', [\App\Http\Controllers\QrScanController::class, 'scanView'])->name('scan.view');
+    Route::post('/scan/{token}/submit', [\App\Http\Controllers\QrScanController::class, 'submit'])->name('scan.submit');
 });
 
 // ─── Admin Panel Rotaları ─────────────────────────────────────────────────────

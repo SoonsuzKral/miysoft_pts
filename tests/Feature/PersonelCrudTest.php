@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Company;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -15,6 +16,7 @@ class PersonelCrudTest extends TestCase
     use RefreshDatabase, WithFaker;
 
     protected User $admin;
+    protected Company $company;
 
     protected function setUp(): void
     {
@@ -30,7 +32,8 @@ class PersonelCrudTest extends TestCase
         $role = Role::firstOrCreate(['name' => 'company_admin', 'guard_name' => 'web']);
         $role->givePermissionTo(['access_admin', 'personel.view', 'personel.create', 'personel.update', 'personel.delete']);
 
-        $this->admin = User::factory()->create(['company_id' => 1]);
+        $this->company = Company::create(['name' => 'Test Şirketi', 'domain' => 'test.local']);
+        $this->admin = User::factory()->create(['company_id' => $this->company->id]);
         $this->admin->assignRole('company_admin');
     }
 
@@ -38,7 +41,7 @@ class PersonelCrudTest extends TestCase
     public function it_can_list_personels(): void
     {
         $response = $this->actingAs($this->admin)
-            ->getJson(route('admin.personel.index'));
+            ->getJson(route('admin.personel.list'));
 
         $response->assertStatus(200)
             ->assertJsonStructure(['data', 'total', 'pages']);
@@ -112,7 +115,7 @@ class PersonelCrudTest extends TestCase
         $personelId = $createResponse->json('data.id');
 
         $response = $this->actingAs($this->admin)
-            ->putJson(route('admin.personel.update', $personelId), [
+            ->postJson(route('admin.personel.update', $personelId), [
                 'first_name' => 'Güncel',
                 'last_name'  => 'Personel',
             ]);

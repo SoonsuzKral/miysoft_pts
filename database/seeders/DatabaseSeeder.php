@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             RolesPermissionsSeeder::class,
             CompaniesSeeder::class,
             PersonelsSeeder::class,
+            DemoDataSeeder::class,
         ]);
     }
 }

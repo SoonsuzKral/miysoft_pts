@@ -103,22 +103,23 @@ const RBAC_URLS = {
     rolePerms:   id => `/admin/roles/${id}/permissions`,
     syncPerms:   id => `/admin/roles/${id}/permissions`,
     storeRole:   '{{ route("admin.roles.store") }}',
-    users:       '/admin/personel/users',
+    destroyRole: id => `/admin/roles/${id}`,
+    users:       '{{ route("admin.roles.users") }}',
+    usersByRole: id => `/admin/roles/${id}/users`,
     assignRole:  '{{ route("admin.roles.assign-user") }}',
+    revokeRole:  '{{ route("admin.roles.revoke-user") }}',
 };
 
 let selectedRoleId = null;
 let allPermissions = [];
 let rolePermIds    = [];
 
-// ─── İlk Yükleme ─────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     loadRoles();
     loadAllPermissions();
     loadUsers();
 });
 
-// ─── Roller ──────────────────────────────────────────────────────────────────
 function loadRoles() {
     axios.get(RBAC_URLS.roles).then(res => {
         const container = document.getElementById('rolesList');
@@ -130,63 +131,122 @@ function loadRoles() {
         }
 
         roleSelect.innerHTML = `<option value="">— Rol seçin —</option>`;
-        container.innerHTML = res.data.data.map(r => `
-            <button onclick="selectRole(${r.id}, '${r.name}')"
-                class="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-[#02E0FB]/5 transition-colors group"
-                id="roleItem-${r.id}">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#02E0FB]/20 to-[#FA6001]/20 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-[#02E0FB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                        </svg>
+        container.innerHTML = res.data.data.map(r => {
+            const isSystem = ['super_admin','company_admin','hr_manager','manager','employee'].includes(r.name);
+            return `
+            <div class="relative group/item" id="roleWrap-${r.id}">
+                <button onclick="selectRole(${r.id}, '${r.name}')"
+                    class="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-[#02E0FB]/5 transition-colors"
+                    id="roleItem-${r.id}">
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#02E0FB]/20 to-[#FA6001]/20 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4 text-[#02E0FB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="font-medium text-gray-800 text-sm truncate">${r.name}</p>
+                            <p class="text-xs text-gray-400">${r.users_count ?? 0} kullanıcı</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="font-medium text-gray-800 text-sm">${r.name}</p>
-                        <p class="text-xs text-gray-400">${r.users_count ?? 0} kullanıcı</p>
-                    </div>
-                </div>
-                <svg class="w-4 h-4 text-gray-300 group-hover:text-[#02E0FB] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </button>`).join('');
+                    <svg class="w-4 h-4 text-gray-300 group-hover:text-[#02E0FB] transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+                ${!isSystem ? `
+                <button onclick="deleteRole(${r.id}, '${r.name}')"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover/item:opacity-100 transition-all"
+                    title="Rolü Sil">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>` : ''}
+            </div>`;
+        }).join('');
 
         res.data.data.forEach(r => {
             roleSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`;
         });
+    }).catch(() => {
+        document.getElementById('rolesList').innerHTML = `<div class="p-4 text-center text-red-400 text-sm">Roller yüklenemedi</div>`;
     });
 }
 
 function selectRole(roleId, roleName) {
     selectedRoleId = roleId;
 
-    // Aktif stili
     document.querySelectorAll('[id^="roleItem-"]').forEach(el => {
         el.classList.remove('bg-[#02E0FB]/10', 'border-l-4', 'border-l-[#02E0FB]');
     });
     const active = document.getElementById(`roleItem-${roleId}`);
     active?.classList.add('bg-[#02E0FB]/10', 'border-l-4', 'border-l-[#02E0FB]');
 
-    document.getElementById('permPanelTitle').textContent = `${roleName} — İzinler`;
+    document.getElementById('permPanelTitle').textContent = `${roleName} — Izinler`;
     document.getElementById('savePermBtn').classList.remove('hidden');
 
-    // Rolün mevcut izinlerini getir
     axios.get(RBAC_URLS.rolePerms(roleId)).then(res => {
         rolePermIds = res.data.permission_ids || [];
         renderPermissions();
+        loadRoleUsers(roleId);
     });
 }
 
-// ─── İzinler ─────────────────────────────────────────────────────────────────
+function loadRoleUsers(roleId) {
+    axios.get(RBAC_URLS.usersByRole(roleId)).then(res => {
+        const list = document.getElementById('roleUsersList');
+        if (!list) return;
+        if (!res.data.data.length) {
+            list.innerHTML = `<span class="text-xs text-gray-400">Bu rol atanmış kullanıcı yok</span>`;
+            return;
+        }
+        list.innerHTML = res.data.data.map(u =>
+            `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-700">${u.name}</span>`
+        ).join(' ');
+    });
+}
+
+function deleteRole(roleId, roleName) {
+    Swal.fire({
+        title: 'Rolü Sil',
+        text: `"${roleName}" rolünü silmek istediğinize emin misiniz?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#FA6001',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Evet, Sil',
+        cancelButtonText: 'İptal',
+    }).then(r => {
+        if (r.isConfirmed) {
+            axios.delete(RBAC_URLS.destroyRole(roleId)).then(res => {
+                toast('success', res.data.message);
+                if (selectedRoleId === roleId) {
+                    selectedRoleId = null;
+                    document.getElementById('permPanelTitle').textContent = 'İzinler';
+                    document.getElementById('savePermBtn').classList.add('hidden');
+                    document.getElementById('permissionContent').innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+                            <p class="font-medium">Rol silindi</p>
+                            <p class="text-sm mt-1">Yeni bir rol seçin</p>
+                        </div>`;
+                }
+                loadRoles();
+            }).catch(err => {
+                const msg = err.response?.data?.message || 'Rol silinemedi.';
+                toast('error', msg);
+            });
+        }
+    });
+}
+
 function loadAllPermissions() {
     axios.get(RBAC_URLS.permissions).then(res => {
         allPermissions = res.data.data || [];
-    });
+    }).catch(() => {});
 }
 
 function renderPermissions() {
     const content = document.getElementById('permissionContent');
 
-    // İzinleri modüle göre grupla
     const grouped = {};
     allPermissions.forEach(p => {
         const parts  = p.name.split('.');
@@ -196,13 +256,13 @@ function renderPermissions() {
     });
 
     const moduleLabels = {
-        dashboard: '📊 Dashboard', personel: '👤 Personel', leave: '📅 İzin',
-        attendance: '⏰ Puantaj', shift: '🔄 Vardiya', company: '🏢 Şirket',
-        department: '📂 Departman', position: '💼 Pozisyon', asset: '📦 Envanter',
-        advance: '💰 Avans', expense: '🧾 Masraf', travel: '✈️ Seyahat',
-        vehicle: '🚗 Araç', visitor: '👥 Ziyaretçi', report: '📈 Raporlar',
-        subscription: '💳 Abonelik', settings: '⚙️ Ayarlar', role: '🛡️ Roller',
-        permission: '🔑 İzinler', notification: '🔔 Bildirimler', access_admin: '🔐 Admin Erişim',
+        dashboard: 'Dashboard', personel: 'Personel', leave: 'Izin',
+        attendance: 'Puantaj', shift: 'Vardiya', company: 'Sirket',
+        department: 'Departman', position: 'Pozisyon', asset: 'Envanter',
+        advance: 'Avans', expense: 'Masraf', travel: 'Seyahat',
+        vehicle: 'Arac', visitor: 'Ziyaretci', report: 'Raporlar',
+        subscription: 'Abonelik', settings: 'Ayarlar', role: 'Roller',
+        permission: 'Izinler', notification: 'Bildirimler', access_admin: 'Admin Erisim',
     };
 
     content.innerHTML = `
@@ -217,7 +277,7 @@ function renderPermissions() {
             ${Object.entries(grouped).map(([module, perms]) => `
             <div class="border border-gray-100 rounded-xl overflow-hidden">
                 <div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
-                    <span class="text-sm font-semibold text-gray-700">${moduleLabels[module] || '🔧 ' + module}</span>
+                    <span class="text-sm font-semibold text-gray-700">${moduleLabels[module] || module}</span>
                     <label class="flex items-center gap-1.5 cursor-pointer text-xs text-gray-500">
                         <input type="checkbox" class="module-toggle w-3.5 h-3.5 rounded text-[#02E0FB]"
                             data-module="${module}"
@@ -242,6 +302,16 @@ function renderPermissions() {
                     }).join('')}
                 </div>
             </div>`).join('')}
+            <div id="roleUsersSection">
+                <div class="border border-gray-100 rounded-xl overflow-hidden">
+                    <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                        <span class="text-sm font-semibold text-gray-700">Bu Role Sahip Kullanıcılar</span>
+                    </div>
+                    <div class="px-4 py-3 flex flex-wrap gap-1.5" id="roleUsersList">
+                        <span class="text-xs text-gray-400">Yükleniyor...</span>
+                    </div>
+                </div>
+            </div>
         </div>`;
 
     updateCount();
@@ -268,26 +338,27 @@ function updateCount() {
 
 function savePermissions() {
     if (!selectedRoleId) return;
+    document.getElementById('savePermBtn').disabled = true;
 
     const permIds = [...document.querySelectorAll('.perm-check:checked')].map(cb => parseInt(cb.value));
 
     axios.post(RBAC_URLS.syncPerms(selectedRoleId), { permission_ids: permIds }).then(res => {
-        toast('success', res.data.message || 'İzinler kaydedildi.');
+        toast('success', res.data.message || 'Izinler kaydedildi.');
         rolePermIds = permIds;
     }).catch(err => {
-        toast('error', 'Kaydetme sırasında hata oluştu.');
+        const msg = err.response?.data?.message || 'Kaydetme sırasında hata oluştu.';
+        toast('error', msg);
+    }).finally(() => {
+        document.getElementById('savePermBtn').disabled = false;
     });
 }
 
-// ─── Kullanıcı Rol Ataması ────────────────────────────────────────────────────
 function loadUsers() {
-    axios.get('/admin/personel/list', { params: { per_page: 200 } }).then(res => {
+    axios.get(RBAC_URLS.users).then(res => {
         const sel = document.getElementById('assignUserId');
         sel.innerHTML = `<option value="">— Kullanıcı seçin —</option>`;
-        (res.data.data || []).forEach(p => {
-            if (p.user_id) {
-                sel.innerHTML += `<option value="${p.user_id}">${p.first_name} ${p.last_name}</option>`;
-            }
+        (res.data.data || []).forEach(u => {
+            sel.innerHTML += `<option value="${u.id}">${u.name} (${u.email})</option>`;
         });
     }).catch(() => {});
 }
@@ -299,10 +370,14 @@ function assignRoleToUser() {
 
     axios.post(RBAC_URLS.assignRole, { user_id: userId, role_id: roleId }).then(res => {
         toast('success', res.data.message || 'Rol atandı.');
-    }).catch(() => toast('error', 'Rol atama sırasında hata.'));
+        loadRoles();
+        if (selectedRoleId) loadRoleUsers(selectedRoleId);
+    }).catch(err => {
+        const msg = err.response?.data?.message || 'Rol atama sırasında hata.';
+        toast('error', msg);
+    });
 }
 
-// ─── Yeni Rol Oluştur ─────────────────────────────────────────────────────────
 function openCreateRoleModal() {
     Swal.fire({
         title: 'Yeni Rol Oluştur',
@@ -310,7 +385,7 @@ function openCreateRoleModal() {
             <div class="text-left space-y-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Rol Adı <span class="text-red-500">*</span></label>
-                    <input type="text" id="newRoleName" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]" placeholder="örn: finance_manager (snake_case)">
+                    <input type="text" id="newRoleName" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]" placeholder="ornek: finance_manager (snake_case)">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
@@ -322,9 +397,9 @@ function openCreateRoleModal() {
         confirmButtonText: 'Oluştur',
         cancelButtonText: 'İptal',
         preConfirm: () => {
-            const name = document.getElementById('newRoleName').value.trim();
+            const name = document.getElementById('newRoleName').value.trim().toLowerCase();
             if (!name) { Swal.showValidationMessage('Rol adı zorunludur.'); return false; }
-            if (!/^[a-z_]+$/.test(name)) { Swal.showValidationMessage('Rol adı yalnızca küçük harf ve alt çizgi içerebilir.'); return false; }
+            if (!/^[a-z_]+$/.test(name)) { Swal.showValidationMessage('Rol adı yalnızca kucuk harf ve alt cizgi icerebilir.'); return false; }
             return { name, description: document.getElementById('newRoleDesc').value };
         }
     }).then(r => {
@@ -332,6 +407,9 @@ function openCreateRoleModal() {
             axios.post(RBAC_URLS.storeRole, r.value).then(res => {
                 toast('success', 'Rol oluşturuldu.');
                 loadRoles();
+            }).catch(err => {
+                const msg = err.response?.data?.message || 'Rol oluşturulamadı.';
+                toast('error', msg);
             });
         }
     });

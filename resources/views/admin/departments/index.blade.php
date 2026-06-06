@@ -45,9 +45,6 @@
             <select id="filterParent" class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#02E0FB]">
                 <option value="">Tümü</option>
                 <option value="root">Yalnızca Kök</option>
-                @foreach($allDepartments as $dept)
-                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
-                @endforeach
             </select>
         </div>
         <div class="flex items-end gap-2 md:col-span-2">
@@ -108,7 +105,22 @@ const DEPT_URLS = {
 
 let isTreeView = false;
 
-document.addEventListener('DOMContentLoaded', () => loadDepartments());
+document.addEventListener('DOMContentLoaded', () => {
+    loadDepartments();
+    loadParentDepartments();
+});
+
+function loadParentDepartments() {
+    axios.get(DEPT_URLS.list, { params: { per_page: 1000, active_only: true } }).then(res => {
+        const sel = document.getElementById('filterParent');
+        res.data.data.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = d.name;
+            sel.appendChild(opt);
+        });
+    });
+}
 
 function loadDepartments(page = 1) {
     const params = {

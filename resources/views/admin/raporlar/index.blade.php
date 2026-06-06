@@ -5,17 +5,17 @@
 @section('page_header')
 <div class="flex items-center justify-between">
     <div>
-        <h1 class="text-2xl font-bold text-gray-900">Raporlar ve Analizler</h1>
-        <p class="text-sm text-gray-500 mt-1">Puantaj, izin, masraf ve personel raporlarını görüntüleyin ve dışa aktarın.</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Raporlar ve Analizler</h1>
+        <p class="text-xs sm:text-sm text-gray-500 mt-1">Puantaj, izin, masraf ve personel raporlarını görüntüleyin ve dışa aktarın.</p>
     </div>
 </div>
 @endsection
 
 @section('content')
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
 
     {{-- Puantaj Raporu --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-xl bg-[#02E0FB]/10 flex items-center justify-center">
                 <svg class="w-6 h-6 text-[#02E0FB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,15 +34,15 @@
             </div>
         </div>
         <div class="flex gap-2 mt-auto">
-            <a href="{{ route('admin.exports.attendance.excel') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#02E0FB] hover:bg-[#00b8d9] text-gray-900 rounded-xl text-sm font-semibold transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                Excel İndir
+            <a href="{{ route('admin.exports.attendance.excel') }}" class="flex-1 inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2.5 bg-[#02E0FB] hover:bg-[#00b8d9] text-gray-900 rounded-xl text-sm font-semibold transition-all">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span class="hidden sm:inline">Excel İndir</span>
             </a>
         </div>
     </div>
 
     {{-- İzin Raporu --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-xl bg-[#FA6001]/10 flex items-center justify-center">
                 <svg class="w-6 h-6 text-[#FA6001]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,15 +65,15 @@
             </div>
         </div>
         <div class="flex gap-2 mt-auto">
-            <button onclick="Swal?.fire({title:'Yakında!', text:'İzin raporu export sistemi geliştirme aşamasındadır.', icon:'info'})" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#FA6001] hover:bg-[#e05500] text-white rounded-xl text-sm font-semibold transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                Excel İndir
+            <button onclick="generateReport('leave')" class="flex-1 inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2.5 bg-[#FA6001] hover:bg-[#e05500] text-white rounded-xl text-sm font-semibold transition-all">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span class="hidden sm:inline">Excel İndir</span>
             </button>
         </div>
     </div>
 
     {{-- Personel Raporu --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
                 <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,15 +87,15 @@
         </div>
         <p class="text-xs text-gray-400">Aktif, pasif ve izindeki tüm personel bilgileri</p>
         <div class="flex gap-2 mt-auto">
-            <a href="{{ route('admin.exports.personel.excel') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                Excel İndir
-            </button>
+            <a href="{{ route('admin.exports.personel.excel') }}" class="flex-1 inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold transition-all">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span class="hidden sm:inline">Excel İndir</span>
+            </a>
         </div>
     </div>
 
     {{-- Masraf Raporu --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
                 <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,15 +109,15 @@
         </div>
         <p class="text-xs text-gray-400">Onaylanan ve reddedilen masraf taleplerine ait özet</p>
         <div class="flex gap-2 mt-auto">
-            <button onclick="Swal?.fire({title:'Yakında!', icon:'info'})" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                Excel İndir
+            <button onclick="generateReport('expense')" class="flex-1 inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold transition-all">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span class="hidden sm:inline">Excel İndir</span>
             </button>
         </div>
     </div>
 
     {{-- Envanter Raporu --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center">
                 <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,15 +131,15 @@
         </div>
         <p class="text-xs text-gray-400">Personelde olan ve depodaki tüm zimmet durumları</p>
         <div class="flex gap-2 mt-auto">
-            <button onclick="Swal?.fire({title:'Yakında!', icon:'info'})" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl text-sm font-semibold transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                Excel İndir
+            <button onclick="generateReport('inventory')" class="flex-1 inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl text-sm font-semibold transition-all">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span class="hidden sm:inline">Excel İndir</span>
             </button>
         </div>
     </div>
 
     {{-- Audit Log Raporu --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 flex flex-col gap-3 sm:gap-4">
         <div class="flex items-center gap-3">
             <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
                 <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,12 +153,57 @@
         </div>
         <p class="text-xs text-gray-400">Kritik işlem geçmişi ve kullanıcı aktivite raporları</p>
         <div class="flex gap-2 mt-auto">
-            <button onclick="Swal?.fire({title:'Yakında!', icon:'info'})" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-700 hover:bg-gray-800 text-white rounded-xl text-sm font-semibold transition-all">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                Görüntüle
+            <button onclick="generateReport('audit')" class="flex-1 inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2.5 bg-gray-700 hover:bg-gray-800 text-white rounded-xl text-sm font-semibold transition-all">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span class="hidden sm:inline">Excel İndir</span>
             </button>
         </div>
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+function generateReport(module) {
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Oluşturuluyor...';
+
+    fetch('{{ route('admin.reports.generate') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ module })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const exportId = data.export_id;
+            const downloadUrl = '{{ route('admin.reports.download', ['exportId' => '__EXPORT_ID__']) }}';
+            const checkExport = setInterval(() => {
+                fetch('{{ route('admin.exports.status') }}?export_id=' + exportId)
+                .then(r => r.json())
+                .then(status => {
+                    if (status.data?.status === 'completed') {
+                        clearInterval(checkExport);
+                        window.location.href = downloadUrl.replace('__EXPORT_ID__', status.data.id);
+                        Swal?.fire({ title: 'Rapor Hazır!', icon: 'success', timer: 2000 });
+                    } else if (status.data?.status === 'failed') {
+                        clearInterval(checkExport);
+                        Swal?.fire({ title: 'Hata!', text: status.data.error_message, icon: 'error' });
+                    }
+                });
+            }, 2000);
+            setTimeout(() => clearInterval(checkExport), 60000);
+        } else {
+            Swal?.fire({ title: 'Hata!', text: data.message, icon: 'error' });
+        }
+    })
+    .catch(() => Swal?.fire({ title: 'Hata!', text: 'Rapor oluşturulamadı.', icon: 'error' }))
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Excel İndir';
+    });
+}
+</script>
+@endpush
 @endsection

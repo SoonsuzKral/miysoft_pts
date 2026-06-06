@@ -4,12 +4,16 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Varlık Türü <span class="text-red-500">*</span></label>
-            <select name="asset_type_id" required class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
-                <option value="">— Tür seçin —</option>
-                @foreach($assetTypes ?? [] as $t)
-                    <option value="{{ $t->id }}" {{ isset($asset) && $asset->asset_type_id == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
-                @endforeach
-            </select>
+            <div class="flex gap-2">
+                <select name="asset_type_id" id="assetTypeSelect" required class="flex-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+                    <option value="">— Tür seçin —</option>
+                    @foreach($assetTypes ?? [] as $t)
+                        <option value="{{ $t->id }}" {{ isset($asset) && $asset->asset_type_id == $t->id ? 'selected' : '' }}>{{ $t->name }}</option>
+                    @endforeach
+                </select>
+                <button type="button" onclick="openCreateAssetTypeModal()" title="Yeni Tür Ekle"
+                    class="shrink-0 px-3 py-2 text-sm font-medium text-white bg-gray-400 hover:bg-gray-500 rounded-lg transition-colors">+</button>
+            </div>
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Varlık Adı <span class="text-red-500">*</span></label>
@@ -19,15 +23,23 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Seri Numarası</label>
-            <input type="text" name="serial" value="{{ $asset->serial ?? '' }}"
-                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB] font-mono"
-                placeholder="SN-XXXX-XXXX">
+            <div class="flex gap-2">
+                <input type="text" name="serial" id="serialInput" value="{{ $asset->serial ?? '' }}"
+                    class="flex-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB] font-mono"
+                    placeholder="SN-XXXX-XXXX">
+                <button type="button" onclick="generateSerialField()" title="Otomatik Oluştur"
+                    class="shrink-0 px-3 py-2 text-xs font-medium text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg transition-colors">Oluştur</button>
+            </div>
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Barkod</label>
-            <input type="text" name="barcode" value="{{ $asset->barcode ?? '' }}"
-                class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB] font-mono"
-                placeholder="BC-XXXX">
+            <div class="flex gap-2">
+                <input type="text" name="barcode" id="barcodeInput" value="{{ $asset->barcode ?? '' }}"
+                    class="flex-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB] font-mono"
+                    placeholder="BC-XXXX">
+                <button type="button" onclick="generateBarcodeField()" title="Otomatik Oluştur"
+                    class="shrink-0 px-3 py-2 text-xs font-medium text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg transition-colors">Oluştur</button>
+            </div>
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Satın Alma Tarihi</label>

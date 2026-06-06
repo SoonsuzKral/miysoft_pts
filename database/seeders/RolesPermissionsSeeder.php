@@ -27,7 +27,7 @@ class RolesPermissionsSeeder extends Seeder
             'attendance.view', 'attendance.create', 'attendance.correct', 'attendance.approve', 'attendance.export',
 
             // Vardiya
-            'shift.view', 'shift.create', 'shift.assign', 'shift.manage',
+            'shift.view', 'shift.create', 'shift.assign', 'shift.manage', 'shift.export',
 
             // Şirket Yapısı
             'company.view', 'company.manage',
@@ -51,6 +51,9 @@ class RolesPermissionsSeeder extends Seeder
 
             // Ziyaretçi
             'visitor.view', 'visitor.create', 'visitor.manage',
+
+            // Hizmet
+            'service.view', 'service.create', 'service.manage',
 
             // Raporlar
             'report.view', 'report.create', 'report.export',
@@ -88,7 +91,7 @@ class RolesPermissionsSeeder extends Seeder
             'personel.view', 'personel.create', 'personel.update', 'personel.delete', 'personel.export', 'personel.import', 'personel.manage',
             'leave.view', 'leave.request', 'leave.approve', 'leave.cancel', 'leave.manage',
             'attendance.view', 'attendance.create', 'attendance.correct', 'attendance.approve', 'attendance.export',
-            'shift.view', 'shift.create', 'shift.assign', 'shift.manage',
+            'shift.view', 'shift.create', 'shift.assign', 'shift.manage', 'shift.export',
             'company.view', 'company.manage',
             'department.view', 'department.create', 'department.update', 'department.delete',
             'position.view', 'position.create', 'position.update', 'position.delete',
@@ -98,6 +101,7 @@ class RolesPermissionsSeeder extends Seeder
             'travel.view', 'travel.request', 'travel.approve', 'travel.manage',
             'vehicle.view', 'vehicle.request', 'vehicle.manage',
             'visitor.view', 'visitor.create', 'visitor.manage',
+            'service.view', 'service.create', 'service.manage',
             'report.view', 'report.create', 'report.export',
             'subscription.view',
             'settings.view', 'settings.manage',
@@ -113,7 +117,7 @@ class RolesPermissionsSeeder extends Seeder
             'personel.view', 'personel.create', 'personel.update', 'personel.export', 'personel.import',
             'leave.view', 'leave.request', 'leave.approve', 'leave.cancel', 'leave.manage',
             'attendance.view', 'attendance.create', 'attendance.correct', 'attendance.approve', 'attendance.export',
-            'shift.view', 'shift.create', 'shift.assign',
+            'shift.view', 'shift.create', 'shift.assign', 'shift.export',
             'department.view', 'department.create', 'department.update',
             'position.view', 'position.create', 'position.update',
             'asset.view', 'asset.assign',
@@ -121,6 +125,7 @@ class RolesPermissionsSeeder extends Seeder
             'expense.view', 'expense.approve',
             'travel.view', 'travel.approve',
             'visitor.view', 'visitor.create',
+            'service.view',
             'report.view', 'report.create', 'report.export',
         ]);
 

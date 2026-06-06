@@ -12,6 +12,12 @@ class PersonelsSeeder extends Seeder
 {
     public function run(): void
     {
+        $existingCount = DB::table('personels')->count();
+        if ($existingCount > 0) {
+            $this->command->info("Personels tablosunda zaten {$existingCount} kayıt var. Seed atlanıyor.");
+            return;
+        }
+
         $faker = \Faker\Factory::create('tr_TR');
 
         $companies = DB::table('companies')->pluck('id');

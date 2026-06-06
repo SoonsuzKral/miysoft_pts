@@ -47,8 +47,11 @@ class LeaveType extends Model
         return $this->hasMany(LeaveBalance::class);
     }
 
-    public function scopeForCompany($query, int $companyId)
+    public function scopeForCompany($query, ?int $companyId)
     {
+        if ($companyId === null) {
+            return $query; // super_admin tüm şirketleri görür
+        }
         return $query->where('company_id', $companyId);
     }
 

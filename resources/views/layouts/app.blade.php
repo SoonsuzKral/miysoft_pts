@@ -1,29 +1,40 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="tr">
 <head>
     @include('partials.head')
-    <title>@yield('title', 'Admin') — {{ config('app.name', 'MİYSOFT PTS') }}</title>
+    <title>@yield('title', 'Admin') &mdash; {{ config('app.name', 'MİYSOFT PTS') }}</title>
 </head>
-<body class="min-h-screen bg-gray-50 font-sans antialiased">
-    <div class="min-h-screen flex">
+<body>
+
+    <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <div id="admin-wrapper">
         @include('partials.sidebar')
-        <div class="flex-1 flex flex-col min-w-0">
+
+        <div id="admin-main">
             @include('partials.header')
-            <main class="flex-1 overflow-auto">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+            <div id="admin-content">
+                <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
                     @yield('breadcrumbs')
+
                     @hasSection('page_header')
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         @yield('page_header')
                     </div>
                     @endif
+
                     @include('partials.messages')
+
                     @yield('content')
+
                 </div>
-            </main>
-            @include('partials.footer')
+                @include('partials.footer')
+            </div>
         </div>
     </div>
+
     @include('partials.scripts')
     @stack('scripts')
 </body>
