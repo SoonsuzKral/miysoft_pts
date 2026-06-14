@@ -3,11 +3,9 @@
 @section('title', 'Abonelik Planları')
 
 @section('page_header')
-<div class="flex items-center justify-between">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">Abonelik Planları</h1>
-        <p class="text-sm text-gray-500 mt-1">Mevcut planlar ve özellik karşılaştırması.</p>
-    </div>
+<div>
+    <h1 class="text-2xl font-bold text-gray-900">Abonelik Planları</h1>
+    <p class="text-sm text-gray-500 mt-1">Mevcut planlar ve özellik karşılaştırması.</p>
 </div>
 @endsection
 

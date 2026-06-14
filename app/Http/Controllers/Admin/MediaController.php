@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Media;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class MediaController extends Controller
@@ -20,18 +20,15 @@ class MediaController extends Controller
         $this->authorize('settings.manage');
         $companyId = auth()->user()->company_id;
 
-        $query = DB::table('media')
-            ->where(function ($q) use ($companyId) {
-                $q->where('company_id', $companyId)->orWhereNull('company_id');
-            })
+        $query = Media::forCompany($companyId)
             ->when($request->filled('mime'), fn ($q) => $q->where('mime', 'like', $request->mime . '%'))
-            ->orderByDesc('created_at');
+            ->latest('created_at');
 
         $total = $query->count();
         $items = $query->paginate($request->get('per_page', 24));
 
         return response()->json([
-            'data' => $items->items(),
+            'data'  => $items->items(),
             'total' => $total,
             'pages' => $items->lastPage(),
         ]);
@@ -49,7 +46,7 @@ class MediaController extends Controller
         $originalName = $file->getClientOriginalName();
         $path = $file->store('media/' . date('Y/m'), 'public');
 
-        $id = DB::table('media')->insertGetId([
+        $media = Media::create([
             'company_id' => auth()->user()->company_id,
             'disk'       => 'public',
             'path'       => $path,
@@ -57,17 +54,16 @@ class MediaController extends Controller
             'mime'       => $file->getMimeType(),
             'size'       => $file->getSize(),
             'created_by' => auth()->id(),
-            'created_at' => now(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Dosya yüklendi.',
             'data'    => [
-                'id'       => $id,
+                'id'       => $media->id,
                 'filename' => $originalName,
                 'path'     => $path,
-                'url'      => Storage::disk('public')->url($path),
+                'url'      => $media->url,
                 'mime'     => $file->getMimeType(),
                 'size'     => $file->getSize(),
             ],
@@ -79,19 +75,14 @@ class MediaController extends Controller
         $this->authorize('settings.manage');
         $companyId = auth()->user()->company_id;
 
-        $media = DB::table('media')
-            ->where('id', $id)
-            ->where(function ($q) use ($companyId) {
-                $q->where('company_id', $companyId)->orWhereNull('company_id');
-            })
-            ->first();
+        $media = Media::forCompany($companyId)->find($id);
 
         if (!$media) {
             return response()->json(['success' => false, 'message' => 'Dosya bulunamadı.'], 404);
         }
 
         Storage::disk($media->disk)->delete($media->path);
-        DB::table('media')->where('id', $id)->delete();
+        $media->delete();
 
         return response()->json(['success' => true, 'message' => 'Dosya silindi.']);
     }
@@ -102,18 +93,13 @@ class MediaController extends Controller
         $ids = $request->validate(['ids' => 'required|array', 'ids.*' => 'integer'])['ids'];
 
         $companyId = auth()->user()->company_id;
-        $items = DB::table('media')
-            ->whereIn('id', $ids)
-            ->where(function ($q) use ($companyId) {
-                $q->where('company_id', $companyId)->orWhereNull('company_id');
-            })
-            ->get();
+        $items = Media::forCompany($companyId)->whereIn('id', $ids)->get();
 
         foreach ($items as $item) {
             Storage::disk($item->disk)->delete($item->path);
         }
 
-        DB::table('media')->whereIn('id', $items->pluck('id'))->delete();
+        Media::whereIn('id', $items->pluck('id'))->delete();
 
         return response()->json(['success' => true, 'message' => count($items) . ' dosya silindi.']);
     }

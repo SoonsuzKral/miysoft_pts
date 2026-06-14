@@ -1,5 +1,8 @@
 {{-- MİYSOFT PTS — Global Scripts --}}
 
+{{-- Alpine.js (reaktivite motoru: x-data, x-show, @click) --}}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 {{-- SweetAlert2 --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -18,24 +21,29 @@
         document.getElementById('admin-sidebar').classList.remove('sidebar-open');
         document.getElementById('sidebar-overlay').classList.remove('active');
     };
-    window.navigateTo = function (url) {
-        closeSidebar();
-        window.location.href = url;
-    };
     document.addEventListener('DOMContentLoaded', function () {
         closeSidebar();
-        document.querySelectorAll('.pts-nav .pts-nav-link').forEach(function (el) {
-            el.addEventListener('click', function () { closeSidebar(); });
-        });
     });
     window.addEventListener('pageshow', function () {
         closeSidebar();
     });
+    // Sidebar link tıklamaları: overlay varsa kapat, sorunsuz yönlendir
+    document.addEventListener('click', function (e) {
+        var link = e.target.closest('.pts-nav-link');
+        if (link) {
+            e.preventDefault();
+            closeSidebar();
+            window.location.href = link.href;
+        }
+    });
 
     // Notif dropdown
     window.toggleNotif = function () {
-        document.getElementById('notif-dropdown').classList.toggle('open');
+        const dd = document.getElementById('notif-dropdown');
+        const opening = !dd.classList.contains('open');
+        dd.classList.toggle('open');
         document.getElementById('user-dropdown').classList.remove('open');
+        if (opening) loadNotifications();
     };
 
     // User menu dropdown
@@ -140,24 +148,8 @@
         });
     };
 
-    // ─── Bildirim Sistemi ──────────────────────────────────────────────────────
-    let notifOpen = false;
-
-    window.toggleNotifications = function() {
-        const dd = document.getElementById('notif-dropdown');
-        notifOpen = !notifOpen;
-        dd.classList.toggle('open', notifOpen);
-        if (notifOpen) loadNotifications();
-    };
-
-    // Dışarı tıklayınca kapat
-    document.addEventListener('click', function(e) {
-        const wrapper = document.getElementById('notifWrapper');
-        if (wrapper && !wrapper.contains(e.target) && notifOpen) {
-            document.getElementById('notif-dropdown').classList.remove('open');
-            notifOpen = false;
-        }
-    });
+    // En son görülen bildirim ID'si (polling ile yeni bildirim tespiti için)
+    let _lastNotifId = null;
 
     const colorMap = {
         yellow: 'bg-yellow-100 text-yellow-600',
@@ -173,6 +165,7 @@
             .then(res => {
                 const list  = document.getElementById('notif-list');
                 const badge = document.getElementById('notif-badge');
+                const items = res.data.data;
                 const count = res.data.unread_count;
 
                 if (count > 0) {
@@ -182,12 +175,35 @@
                     badge.style.display = 'none';
                 }
 
-                if (!res.data.data.length) {
+                if (!items.length) {
                     list.innerHTML = `<div style="padding:1.5rem;text-align:center;font-size:.8125rem;color:#94a3b8">Yeni bildirim yok</div>`;
                     return;
                 }
 
-                list.innerHTML = res.data.data.map(n => {
+                // Yeni bildirim tespiti (polling yedeği — Echo olmasa da çalışır)
+                const latest = items[0];
+                if (_lastNotifId === null) {
+                    _lastNotifId = latest.id;
+                } else if (latest.id !== _lastNotifId && !latest.is_read) {
+                    _lastNotifId = latest.id;
+                    playNotificationSound();
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'info',
+                            title: latest.title || 'Bildirim',
+                            text: latest.message || '',
+                            showConfirmButton: true,
+                            confirmButtonText: 'İncele',
+                            confirmButtonColor: '#02E0FB',
+                            timer: 5000,
+                            timerProgressBar: true,
+                        });
+                    }
+                }
+
+                list.innerHTML = items.map(n => {
                     const cc = colorMap[n.color] || 'bg-gray-100 text-gray-500';
                     return `
                     <div class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${!n.is_read ? 'bg-[#02E0FB]/5 border-l-2 border-l-[#02E0FB]' : ''}"
@@ -251,6 +267,109 @@
             }
         }, 500);
     }
+
+    // ─── Bildirim Sesi (Web Audio API — autoplay politikası için resume) ─────
+    window._audioCtx = null;
+
+    function playNotificationSound() {
+        try {
+            if (!window._audioCtx) {
+                window._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // İlk kullanıcı tıklamasında AudioContext'i resume et
+                document.addEventListener('click', function resume() {
+                    if (window._audioCtx?.state === 'suspended') window._audioCtx.resume();
+                    document.removeEventListener('click', resume);
+                }, { once: true });
+            }
+            if (window._audioCtx.state === 'suspended') {
+                window._audioCtx.resume();
+            }
+            const ctx = window._audioCtx;
+            const now = ctx.currentTime;
+
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'triangle';
+            osc1.frequency.value = 880;
+            gain1.gain.setValueAtTime(0.25, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            osc1.connect(gain1).connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.12);
+
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'triangle';
+            osc2.frequency.value = 1320;
+            gain2.gain.setValueAtTime(0.001, now);
+            gain2.gain.linearRampToValueAtTime(0.28, now + 0.08);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            osc2.connect(gain2).connect(ctx.destination);
+            osc2.start(now + 0.1);
+            osc2.stop(now + 0.45);
+        } catch (e) {}
+    }
+
+    // ─── Reverb / Echo Gerçek Zamanlı Bildirimler ──────────────────────────────
+    // Echo, Vite modülüyle asenkron yüklenir; bu inline script daha önce çalışır.
+    // Bu yüzden Echo hazır olana kadar 200ms aralıklarla deneriz.
+    (function initEcho() {
+        if (typeof Echo === 'undefined') {
+            return setTimeout(initEcho, 200);
+        }
+        const userId = document.querySelector('meta[name="user-id"]')?.getAttribute('content');
+        if (!userId) return;
+
+        // Kullanıcıya özel kanal
+        Echo.private('App.Models.User.' + userId)
+            .notification((notification) => {
+                updateBadge();
+                playNotificationSound();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: notification.title || 'Bildirim',
+                        text: notification.message || '',
+                        showConfirmButton: true,
+                        confirmButtonText: 'İncele',
+                        confirmButtonColor: '#02E0FB',
+                        timer: 5000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('click', () => {
+                                if (notification.action_url) {
+                                    window.location.href = notification.action_url;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+        // Admin genel kanalı
+        Echo.channel('admin-notifications')
+            .notification((notification) => {
+                updateBadge();
+                playNotificationSound();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: notification.title || 'Bildirim',
+                        text: notification.message || '',
+                        showConfirmButton: true,
+                        confirmButtonText: 'İncele',
+                        confirmButtonColor: '#02E0FB',
+                        timer: 5000,
+                        timerProgressBar: true,
+                    });
+                }
+            });
+    })();
+
 </script>
 
 {{-- Admin global JS --}}

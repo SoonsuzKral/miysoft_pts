@@ -24,6 +24,7 @@ class FrontendController extends Controller
     {
         $hero      = Content::section('hero');
         $features  = Content::section('features');
+        $footer    = Content::section('footer');
         $partners  = PartnerLogo::active()->get();
         $plans     = SubscriptionPlan::active()->get();
         $latestPosts = Blog::with('category')
@@ -53,15 +54,16 @@ class FrontendController extends Controller
         ];
 
         return view('frontend.index', compact(
-            'hero', 'features', 'partners', 'plans',
+            'hero', 'features', 'footer', 'partners', 'plans',
             'latestPosts', 'how_it_works', 'trust_badges', 'testimonials'
         ));
     }
 
     public function about()
     {
-        $about = Content::section('about');
-        return view('frontend.about', compact('about'));
+        $about  = Content::section('about');
+        $footer = Content::section('footer');
+        return view('frontend.about', compact('about', 'footer'));
     }
 
     public function blog(Request $request)
@@ -74,7 +76,8 @@ class FrontendController extends Controller
             ->latest()
             ->paginate(9);
 
-        return view('frontend.blog.index', compact('posts', 'categories'));
+        $footer = Content::section('footer');
+        return view('frontend.blog.index', compact('posts', 'categories', 'footer'));
     }
 
     public function blogShow(string $slug)
@@ -90,19 +93,22 @@ class FrontendController extends Controller
             ->take(3)
             ->get();
 
-        return view('frontend.blog_show', compact('post', 'relatedPosts'));
+        $footer = Content::section('footer');
+        return view('frontend.blog_show', compact('post', 'relatedPosts', 'footer'));
     }
 
     public function pricing()
     {
-        $plans = SubscriptionPlan::active()->get();
-        return view('frontend.pricing', compact('plans'));
+        $plans  = SubscriptionPlan::active()->get();
+        $footer = Content::section('footer');
+        return view('frontend.pricing', compact('plans', 'footer'));
     }
 
     public function contact()
     {
         $contact = Content::section('contact');
-        return view('frontend.contact', compact('contact'));
+        $footer  = Content::section('footer');
+        return view('frontend.contact', compact('contact', 'footer'));
     }
 
     public function storeContact(Request $request)
@@ -124,8 +130,9 @@ class FrontendController extends Controller
 
     public function freeTrial()
     {
-        $plans = SubscriptionPlan::active()->get();
-        return view('frontend.free_trial', compact('plans'));
+        $plans  = SubscriptionPlan::active()->get();
+        $footer = Content::section('footer');
+        return view('frontend.free_trial', compact('plans', 'footer'));
     }
 
     public function storeFreeTrial(Request $request)
@@ -206,6 +213,7 @@ class FrontendController extends Controller
             return Content::where('key', $contentKeys[$page])->value('value');
         });
 
-        return view('frontend.legal', compact('title', 'content'));
+        $footer = Content::section('footer');
+        return view('frontend.legal', compact('title', 'content', 'footer'));
     }
 }

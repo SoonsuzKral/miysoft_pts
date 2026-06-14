@@ -22,7 +22,7 @@ class ExpenseRequestNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toArray(object $notifiable): array
@@ -33,11 +33,16 @@ class ExpenseRequestNotification extends Notification implements ShouldQueue
             'title'        => 'Yeni Masraf Talebi',
             'message'      => "{$this->personelName} — {$this->categoryName}",
             'subtitle'     => number_format($this->amount, 2) . " {$this->currency} · {$this->expenseDate}",
-            'action_url'   => "/admin/expenses/requests/{$this->expenseId}",
+            'action_url'   => "/admin/expenses",
             'action_label' => 'Masrafı İncele',
             'model_id'     => $this->expenseId,
             'model_type'   => 'expense_request',
             'color'        => 'red',
         ];
+    }
+
+    public function toBroadcast(object $notifiable): array
+    {
+        return $this->toArray($notifiable);
     }
 }

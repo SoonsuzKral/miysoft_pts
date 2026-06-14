@@ -23,7 +23,7 @@ class LeaveRequestNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toArray(object $notifiable): array
@@ -34,12 +34,17 @@ class LeaveRequestNotification extends Notification implements ShouldQueue
             'title'          => 'Yeni İzin Talebi',
             'message'        => "{$this->personelName} — {$this->leaveTypeName} ({$this->totalDays} gün)",
             'subtitle'       => "{$this->startDate} → {$this->endDate}",
-            'action_url'     => "/admin/leave/requests/{$this->leaveRequestId}",
+            'action_url'     => "/admin/leave",
             'action_label'   => 'İzni İncele',
             'model_id'       => $this->leaveRequestId,
             'model_type'     => 'leave_request',
             'requested_by'   => $this->requestedBy,
             'color'          => 'yellow',
         ];
+    }
+
+    public function toBroadcast(object $notifiable): array
+    {
+        return $this->toArray($notifiable);
     }
 }

@@ -12,13 +12,13 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
             </svg>
             <p class="text-sm text-gray-500">Belge yüklemek için tıklayın veya sürükleyin</p>
-            <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG, DOCX — Max 10MB</p>
+            <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG, DOCX, XLSX — Max 10MB</p>
         </div>
     </div>
 
     {{-- Yükleme Formu --}}
     <form id="docUploadForm" class="hidden space-y-3 bg-gray-50 rounded-xl p-4 border border-gray-200">
-        <input type="file" id="docFileInput" name="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.docx"
+        <input type="file" id="docFileInput" name="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.docx,.doc,.xlsx,.xls,.csv"
             onchange="previewDocFile(this)">
 
         <div>
@@ -36,17 +36,20 @@
 
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <label class="block text-xs font-medium text-gray-600 mb-1">Belge Türü <span class="text-red-500">*</span></label>
-                <select name="type" required class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
-                    <option value="">— Seçiniz —</option>
-                    @foreach(['Kimlik Kartı','Pasaport','İkametgah','Diploma','Sertifika','Sabıka Kaydı','Sağlık Raporu','Sözleşme','SGK Belgesi','Diğer'] as $type)
-                    <option value="{{ $type }}">{{ $type }}</option>
-                    @endforeach
-                </select>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Belge Adı <span class="text-red-500">*</span></label>
+                <input type="text" name="type" required
+                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB] focus:ring-1 focus:ring-[#02E0FB]"
+                    placeholder="Örn: İş Sözleşmesi, Banka Verileri, SGK Bildirgesi ...">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Son Geçerlilik Tarihi</label>
-                <input type="date" name="expiry_at" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+                <div class="flex items-center gap-2">
+                    <input type="date" id="docExpiryInput" name="expiry_at" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+                    <label class="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap cursor-pointer">
+                        <input type="checkbox" id="docIndefiniteCheck" class="rounded border-gray-300 text-[#02E0FB] focus:ring-[#02E0FB]" onchange="document.getElementById('docExpiryInput').disabled = this.checked; if(this.checked) document.getElementById('docExpiryInput').value = '';">
+                        Süresiz
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -67,7 +70,7 @@
                         @php
                         $ext = pathinfo($doc->file_path, PATHINFO_EXTENSION);
                         $icon = match(strtolower($ext)) {
-                            'pdf' => '📄', 'jpg', 'jpeg', 'png' => '🖼️', 'docx', 'doc' => '📝', default => '📎'
+                            'pdf' => '📄', 'jpg', 'jpeg', 'png' => '🖼️', 'docx', 'doc' => '📝', 'xlsx', 'xls', 'csv' => '📊', default => '📎'
                         };
                         @endphp
                         <span class="text-lg">{{ $icon }}</span>
@@ -78,16 +81,25 @@
                             {{ $doc->original_name ?? basename($doc->file_path) }}
                             @if($doc->expiry_at)
                             · Son: {{ \Carbon\Carbon::parse($doc->expiry_at)->format('d.m.Y') }}
-                            @if(\Carbon\Carbon::parse($doc->expiry_at)->isPast())
-                                <span class="text-red-500 font-semibold">⚠ Süresi Dolmuş</span>
-                            @elseif(\Carbon\Carbon::parse($doc->expiry_at)->diffInDays(now()) <= 30)
-                                <span class="text-yellow-500 font-semibold">⏰ Yakında Bitiyor</span>
+                            @php $daysLeft = now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($doc->expiry_at)->startOfDay(), false) @endphp
+                            @if($daysLeft < 0)
+                                <span class="text-red-500 font-semibold">⚠ Süresi Doldu</span>
+                            @elseif($daysLeft <= 30)
+                                <span class="text-yellow-500 font-semibold">⏰ {{ $daysLeft }} gün kaldı</span>
+                            @else
+                                <span class="text-emerald-500 font-semibold">✅ {{ $daysLeft }} gün kaldı</span>
                             @endif
+                            @else
+                            · <span class="text-gray-400">Süresiz</span>
                             @endif
                         </p>
                     </div>
                 </div>
                 <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a href="{{ route('admin.personel.documents.view', $doc->id) }}"
+                       class="p-1.5 text-gray-400 hover:text-[#02E0FB] hover:bg-blue-50 rounded-lg transition-colors" title="Görüntüle" target="_blank">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </a>
                     <a href="{{ route('admin.personel.documents.download', $doc->id) }}"
                        class="p-1.5 text-gray-400 hover:text-[#02E0FB] hover:bg-blue-50 rounded-lg transition-colors" title="İndir">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -112,6 +124,19 @@
 function previewDocFile(input) {
     if (!input.files.length) return;
     const file = input.files[0];
+
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'];
+    if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|jpg|jpeg|png|docx|doc|xlsx|xls|csv)$/i)) {
+        toast('warning', 'Geçersiz dosya türü. PDF, JPG, PNG, DOCX, XLSX dosyaları kabul edilir.');
+        input.value = '';
+        return;
+    }
+
     document.getElementById('docFileName').textContent = file.name;
     document.getElementById('docFileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
     document.getElementById('docDropZone').classList.add('hidden');
@@ -132,21 +157,21 @@ function cancelDocUpload() {
 
 function uploadDocument(personelId) {
     const form = document.getElementById('docUploadForm');
-    const type = form.querySelector('[name="type"]').value;
-    if (!type) { toast('warning', 'Belge türü seçimi zorunludur.'); return; }
+    const type = form.querySelector('[name="type"]').value.trim();
+    if (!type) { toast('warning', 'Belge adı zorunludur.'); return; }
 
     const formData = new FormData();
     formData.append('file', document.getElementById('docFileInput').files[0]);
     formData.append('type', type);
-    const expiry = form.querySelector('[name="expiry_at"]').value;
-    if (expiry) formData.append('expiry_at', expiry);
+    const isIndefinite = document.getElementById('docIndefiniteCheck')?.checked;
+    if (!isIndefinite) {
+        const expiry = form.querySelector('[name="expiry_at"]').value;
+        if (expiry) formData.append('expiry_at', expiry);
+    }
 
-    axios.post(`/admin/personel/${personelId}/documents`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    }).then(res => {
+    axios.post(`/admin/personel/${personelId}/documents`, formData).then(res => {
         toast('success', res.data.message);
         cancelDocUpload();
-        // Listeyi güncelle
         setTimeout(() => location.reload(), 1000);
     }).catch(err => {
         toast('error', err.response?.data?.message || 'Yükleme başarısız.');

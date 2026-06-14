@@ -219,7 +219,7 @@ class PuantajController extends Controller
             'absent' => count(array_filter($summaries, fn($s) => $s['status'] === 'absent')),
         ];
 
-        return response()->json(compact('data', 'stats', 'date'));
+        return response()->json(['data' => $summaries, 'stats' => $stats, 'date' => $date]);
     }
 
     public function personelDetail(Request $request): JsonResponse
@@ -338,7 +338,11 @@ class PuantajController extends Controller
             'total_absent' => $summaries->sum('absent_days'),
         ];
 
-        return response()->json(compact('data', 'stats', 'year', 'month'));
+        // Merge department info into summaries
+        $departments = $personels->keyBy('id')->map(fn($p) => $p->department?->name ?? '—');
+        $summaries = $summaries->map(fn($s) => array_merge($s, ['department' => $departments->get($s['personel_id'], '—')]));
+
+        return response()->json(['data' => $summaries, 'stats' => $stats, 'year' => $year, 'month' => $month]);
     }
 
     public function todayStats(): JsonResponse

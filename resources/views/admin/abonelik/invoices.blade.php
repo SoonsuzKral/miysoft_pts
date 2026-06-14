@@ -3,17 +3,15 @@
 @section('title', 'Faturalar')
 
 @section('page_header')
-<div class="flex items-center justify-between">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">Fatura Geçmişi</h1>
-        <p class="text-sm text-gray-500 mt-1">Tüm abonelik faturalarınızı görüntüleyin ve indirin.</p>
-    </div>
+<div>
+    <h1 class="text-2xl font-bold text-gray-900">Fatura Geçmişi</h1>
+    <p class="text-sm text-gray-500 mt-1">Tüm abonelik faturalarınızı görüntüleyin ve indirin.</p>
 </div>
 @endsection
 
 @section('content')
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+    <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
         <p class="text-sm text-gray-500">Toplam <span class="font-semibold text-gray-900" id="invoiceCount">-</span> fatura</p>
         <input type="text" placeholder="Fatura ara..." class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#02E0FB] focus:border-transparent w-56">
     </div>

@@ -8,6 +8,59 @@ use Illuminate\Http\JsonResponse;
 
 class NotificationController extends Controller
 {
+    /** Tüm bildirimler sayfası (HTML) + JSON listesi */
+    public function index(Request $request): \Illuminate\View\View|\Illuminate\Http\JsonResponse
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return $this->listJson($request);
+        }
+        return view('admin.notifications.index');
+    }
+
+    /** JSON paginated list */
+    protected function listJson(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+        $perPage = $request->integer('per_page', 20);
+
+        $query = $user->notifications();
+
+        if ($request->filled('type')) {
+            $query->where('data->type', $request->type);
+        }
+        if ($request->filled('read')) {
+            if ($request->read === 'unread') {
+                $query->whereNull('read_at');
+            } elseif ($request->read === 'read') {
+                $query->whereNotNull('read_at');
+            }
+        }
+
+        $paginator = $query->latest()->paginate(min($perPage, 100));
+
+        $data = $paginator->map(fn ($n) => [
+            'id'           => $n->id,
+            'type'         => $n->data['type'] ?? 'info',
+            'icon'         => $n->data['icon'] ?? '🔔',
+            'title'        => $n->data['title'] ?? 'Bildirim',
+            'message'      => $n->data['message'] ?? '',
+            'subtitle'     => $n->data['subtitle'] ?? null,
+            'action_url'   => $n->data['action_url'] ?? null,
+            'action_label' => $n->data['action_label'] ?? 'İncele',
+            'color'        => $n->data['color'] ?? 'blue',
+            'is_read'      => $n->read_at !== null,
+            'time'         => $n->created_at->diffForHumans(),
+            'time_full'    => $n->created_at->format('d.m.Y H:i'),
+        ]);
+
+        return response()->json([
+            'data'         => $data,
+            'total'        => $paginator->total(),
+            'current_page' => $paginator->currentPage(),
+            'last_page'    => $paginator->lastPage(),
+        ]);
+    }
+
     /** Son bildirimleri getir (header dropdown için) */
     public function recent(Request $request): JsonResponse
     {

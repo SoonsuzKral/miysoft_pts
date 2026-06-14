@@ -43,6 +43,7 @@ class GenerateReportJob implements ShouldQueue
                 'personel'  => $this->personelReport(),
                 'attendance'=> $this->attendanceReport(),
                 'asset'     => $this->assetReport(),
+                'holiday'   => $this->holidayReport(),
                 default     => throw new \InvalidArgumentException("Bilinmeyen modül: {$this->module}"),
             };
 
@@ -346,6 +347,30 @@ class GenerateReportJob implements ShouldQueue
 
         return [
             'headers' => ['Seri No', 'Varlık Adı', 'Tür', 'Zimmetli', 'Durum', 'Satın Alma', 'Fiyat'],
+            'rows' => $rows,
+        ];
+    }
+
+    private function holidayReport(): array
+    {
+        $year = $this->parameters['year'] ?? now()->year;
+
+        $rows = DB::table('holidays')
+            ->where(function ($q) {
+                $q->where('company_id', $this->companyId)->orWhereNull('company_id');
+            })
+            ->whereYear('date', $year)
+            ->orderBy('date')
+            ->select(['name', 'date', 'country_code', 'is_national'])
+            ->get()->map(fn ($r) => [
+                $r->name,
+                $r->date,
+                $r->is_national ? 'Resmi Tatil' : 'Diğer',
+                $r->country_code,
+            ])->toArray();
+
+        return [
+            'headers' => ['Tatil Adı', 'Tarih', 'Tür', 'Ülke'],
             'rows' => $rows,
         ];
     }

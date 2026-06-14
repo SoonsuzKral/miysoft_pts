@@ -104,7 +104,7 @@
             </tbody>
         </table>
     </div>
-    <div id="advPagination" class="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+    <div id="advPagination" class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div class="text-xs text-gray-500" id="advTableInfo">—</div>
         <div class="flex gap-1" id="advPageButtons"></div>
     </div>

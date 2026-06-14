@@ -14,11 +14,11 @@
             <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12 mb-12">
                 <h2 class="text-2xl font-black text-gray-900 mb-6">Misyonumuz</h2>
                 <p class="text-gray-600 leading-relaxed mb-6">
-                    {{ $about['mission'] ?? 'Şirketlerin insan kaynakları süreçlerini dijitalleştirmek, personel yönetimini kolaylaştırmak ve verimliliği artırmak için güçlü, kullanıcı dostu bir platform sunmak.' }}
+                    {{ $about['about.mission'] ?? 'Şirketlerin insan kaynakları süreçlerini dijitalleştirmek, personel yönetimini kolaylaştırmak ve verimliliği artırmak için güçlü, kullanıcı dostu bir platform sunmak.' }}
                 </p>
                 <h2 class="text-2xl font-black text-gray-900 mb-6">Vizyonumuz</h2>
                 <p class="text-gray-600 leading-relaxed">
-                    {{ $about['vision'] ?? 'Türkiye ve bölgede İK ve personel yönetiminde referans olan, en yenilikçi ve güvenilir SaaS platformu olmak.' }}
+                    {{ $about['about.vision'] ?? 'Türkiye ve bölgede İK ve personel yönetiminde referans olan, en yenilikçi ve güvenilir SaaS platformu olmak.' }}
                 </p>
             </div>
 

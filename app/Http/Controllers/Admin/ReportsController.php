@@ -4,21 +4,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerateReportJob;
+use App\Models\Export;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class ReportsController extends Controller
 {
     public function index()
     {
-        return view('admin.raporlar.index');
+        $recentExports = Export::forCompany(auth()->user()->company_id)
+            ->where('user_id', auth()->id())
+            ->latest()
+            ->take(10)
+            ->get();
+
+        return view('admin.raporlar.index', compact('recentExports'));
     }
 
     public function generate(Request $request): JsonResponse
     {
         $request->validate([
-            'module'  => 'required|in:leave,expense,inventory,audit,personel,attendance,asset',
+            'module'  => 'required|in:leave,expense,inventory,audit,personel,attendance,asset,holiday',
             'year'    => 'nullable|integer|min:2020|max:2030',
             'month'   => 'nullable|integer|min:1|max:12',
             'format'  => 'nullable|in:csv,excel,pdf',
@@ -26,29 +32,26 @@ class ReportsController extends Controller
 
         $companyId = auth()->user()->company_id;
 
-        $exportId = DB::table('exports')->insertGetId([
-            'company_id'  => $companyId,
-            'user_id'     => auth()->id(),
-            'module'      => $request->module,
-            'parameters'  => json_encode($request->only(['year', 'month', 'format'])),
-            'status'      => 'pending',
-            'created_at'  => now(),
-            'updated_at'  => now(),
+        $export = Export::create([
+            'company_id' => $companyId,
+            'user_id'    => auth()->id(),
+            'module'     => $request->module,
+            'parameters' => $request->only(['year', 'month', 'format']),
+            'status'     => 'pending',
         ]);
 
-        GenerateReportJob::dispatch($exportId, $companyId, $request->module, $request->only(['year', 'month', 'format']));
+        GenerateReportJob::dispatch($export->id, $companyId, $request->module, $request->only(['year', 'month', 'format']));
 
         return response()->json([
-            'success'  => true,
-            'message'  => 'Rapor oluşturma başlatıldı. Tamamlanınca bildirim alacaksınız.',
-            'export_id' => $exportId,
+            'success'   => true,
+            'message'   => 'Rapor oluşturma başlatıldı. Tamamlanınca bildirim alacaksınız.',
+            'export_id' => $export->id,
         ]);
     }
 
     public function download(Request $request, int $exportId)
     {
-        $export = DB::table('exports')
-            ->where('id', $exportId)
+        $export = Export::where('id', $exportId)
             ->where('company_id', auth()->user()->company_id)
             ->first();
 
@@ -62,8 +65,7 @@ class ReportsController extends Controller
             return response()->json(['success' => false, 'message' => 'Rapor dosyası bulunamadı.'], 404);
         }
 
-        $params = json_decode($export->parameters, true) ?? [];
-        $format = $params['format'] ?? 'csv';
+        $format = $export->parameters['format'] ?? 'csv';
         
         $extension = match ($format) {
             'pdf' => 'pdf',

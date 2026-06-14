@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Modules\Finans\Models\ExpenseRequest;
 use App\Modules\Finans\Models\ExpenseCategory;
 use App\Modules\Finans\Requests\StoreExpenseRequest;
+use App\Notifications\ExpenseRequestNotification;
+use App\Traits\NotifiesManagers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
 class ExpenseController extends Controller
 {
+    use NotifiesManagers;
     public function indexView()
     {
         $this->authorize('expense.view');
@@ -91,6 +94,21 @@ class ExpenseController extends Controller
         }
 
         $expense = ExpenseRequest::create($data);
+
+        // Yöneticilere bildirim gönder
+        $personel = \App\Modules\Personel\Models\Personel::find($data['personel_id']);
+        $this->notifyRoles(
+            $data['company_id'],
+            ['company_admin', 'hr_manager', 'finance'],
+            new ExpenseRequestNotification(
+                expenseId:     $expense->id,
+                personelName:  $personel ? $personel->first_name . ' ' . $personel->last_name : '—',
+                amount:        (float) $data['amount'],
+                currency:      $data['currency'],
+                categoryName:  $expense->category?->name ?? '—',
+                expenseDate:   $data['expense_date'],
+            )
+        );
 
         // Limit uyarısı
         $warning = $expense->exceedsLimit()

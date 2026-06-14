@@ -21,17 +21,30 @@ class PersonelDocumentController extends Controller
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($d) => [
-                'id'           => $d->id,
-                'type'         => $d->type,
-                'original_name'=> $d->original_name,
-                'file_path'    => $d->file_path,
-                'mime'         => $d->mime,
-                'file_size'    => $d->file_size,
-                'expiry_at'    => $d->expiry_at,
-                'is_expired'   => $d->expiry_at && now()->isAfter($d->expiry_at),
-                'expiring_soon'=> $d->expiry_at && !now()->isAfter($d->expiry_at) && now()->diffInDays($d->expiry_at) <= 30,
-                'created_at'   => $d->created_at,
-                'download_url' => route('admin.personel.documents.download', $d->id),
+                'id'            => $d->id,
+                'type'          => $d->type,
+                'original_name' => $d->original_name,
+                'file_path'     => $d->file_path,
+                'mime'          => $d->mime,
+                'file_size'     => $d->file_size,
+                'ext'           => strtolower(pathinfo($d->file_path, PATHINFO_EXTENSION)),
+                'expiry_at'     => $d->expiry_at,
+                'days_left'     => $d->expiry_at ? now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($d->expiry_at)->startOfDay(), false) : null,
+                'display_text'  => $d->expiry_at
+                    ? (now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($d->expiry_at)->startOfDay(), false) < 0
+                        ? 'Süresi Doldu'
+                        : now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($d->expiry_at)->startOfDay(), false) . ' gün kaldı')
+                    : 'Süresiz',
+                'display_class' => $d->expiry_at
+                    ? (now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($d->expiry_at)->startOfDay(), false) < 0
+                        ? 'text-red-500 font-semibold'
+                        : (now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($d->expiry_at)->startOfDay(), false) <= 30
+                            ? 'text-amber-500 font-semibold'
+                            : 'text-emerald-500'))
+                    : 'text-gray-400',
+                'created_at'    => $d->created_at,
+                'download_url'  => route('admin.personel.documents.download', $d->id),
+                'view_url'      => route('admin.personel.documents.view', $d->id),
             ]);
 
         return response()->json(['data' => $docs]);
@@ -43,13 +56,17 @@ class PersonelDocumentController extends Controller
         $this->authorize('personel.update');
 
         $request->validate([
-            'file'      => 'required|file|max:10240|mimes:pdf,jpg,jpeg,png,docx,doc',
-            'type'      => 'required|string|max:100',
+            'file'      => 'required|file|max:10240|mimes:pdf,jpg,jpeg,png,docx,doc,xlsx,xls,csv',
+            'type'      => 'required|string|max:200',
             'expiry_at' => 'nullable|date|after:today',
         ]);
 
         $file = $request->file('file');
-        $path = $file->store("personel-docs/{$personel->company_id}/{$personel->id}", 'local');
+        $dir = "personel-documents/{$personel->id}";
+        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($dir)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory($dir);
+        }
+        $path = $file->store($dir, 'public');
 
         $docId = DB::table('personel_documents')->insertGetId([
             'personel_id'   => $personel->id,
@@ -89,14 +106,33 @@ class PersonelDocumentController extends Controller
 
         $doc = DB::table('personel_documents')->find($id);
 
-        if (!$doc || !Storage::disk('local')->exists($doc->file_path)) {
+        if (!$doc || !Storage::disk('public')->exists($doc->file_path)) {
             abort(404, 'Belge bulunamadı.');
         }
 
-        return Storage::disk('local')->download(
+        return Storage::disk('public')->download(
             $doc->file_path,
             $doc->original_name ?? basename($doc->file_path),
             ['Content-Type' => $doc->mime ?? 'application/octet-stream']
+        );
+    }
+
+    /** Belge görüntüle (inline) */
+    public function view(int $id)
+    {
+        $this->authorize('personel.view');
+
+        $doc = DB::table('personel_documents')->find($id);
+
+        if (!$doc || !Storage::disk('public')->exists($doc->file_path)) {
+            abort(404, 'Belge bulunamadı.');
+        }
+
+        return Storage::disk('public')->response(
+            $doc->file_path,
+            null,
+            ['Content-Type' => $doc->mime ?? 'application/octet-stream',
+             'Content-Disposition' => 'inline']
         );
     }
 
@@ -110,7 +146,7 @@ class PersonelDocumentController extends Controller
             return response()->json(['success' => false, 'message' => 'Belge bulunamadı.'], 404);
         }
 
-        Storage::disk('local')->delete($doc->file_path);
+        Storage::disk('public')->delete($doc->file_path);
         DB::table('personel_documents')->where('id', $id)->delete();
 
         return response()->json(['success' => true, 'message' => 'Belge silindi.']);

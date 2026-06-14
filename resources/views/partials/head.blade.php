@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+@auth<meta name="user-id" content="{{ auth()->id() }}">@endauth
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 {{-- SEO Meta --}}

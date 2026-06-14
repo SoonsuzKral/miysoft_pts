@@ -63,13 +63,17 @@ class CmsController extends Controller
             'items.*.key'   => 'required|string|max:100',
             'items.*.value' => 'nullable|string',
             'items.*.label' => 'nullable|string|max:191',
-            'items.*.type'  => 'nullable|in:text,html,json,image,url',
+            'items.*.type'  => 'nullable|in:text,textarea,html,json,image,url',
         ]);
 
+        $section = null;
+
         foreach ($data['items'] as $item) {
+            $section = $request->input('section', explode('.', $item['key'])[0] ?? null);
             Content::updateOrCreate(
                 ['key' => $item['key']],
                 [
+                    'section'    => $section,
                     'value'      => $item['value'] ?? '',
                     'label'      => $item['label'] ?? null,
                     'type'       => $item['type'] ?? 'text',
@@ -78,7 +82,19 @@ class CmsController extends Controller
             );
         }
 
-        Cache::tags(['content'])->flush();
+        // Cache'i manuel temizle (model booted ile birlikte çifte garanti)
+        if ($section) {
+            Cache::forget("content_section:{$section}");
+            // Legal sayfaları farklı cache key kullanır (FrontendController::legalPage)
+            if ($section === 'legal') {
+                foreach (['kvkk', 'privacy', 'terms'] as $page) {
+                    Cache::forget("legal_{$page}");
+                }
+            }
+        }
+        foreach ($data['items'] as $item) {
+            Cache::forget("content:{$item['key']}");
+        }
 
         return response()->json(['success' => true, 'message' => 'İçerik güncellendi.']);
     }
@@ -205,6 +221,68 @@ class CmsController extends Controller
         return response()->json(['success' => true, 'message' => 'Blog yazısı silindi.']);
     }
 
+    // ─── Blog Kategori CRUD ───────────────────────────────────────────────────
+
+    public function blogCategories(): JsonResponse
+    {
+        $this->authorize('settings.manage');
+        $categories = BlogCategory::withCount('blogs')->orderBy('name')->get();
+        return response()->json(['data' => $categories]);
+    }
+
+    public function storeBlogCategory(Request $request): JsonResponse
+    {
+        $this->authorize('settings.manage');
+
+        $data = $request->validate([
+            'name'      => 'required|string|max:191',
+            'color'     => 'nullable|string|max:7',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $data['is_active'] = $request->boolean('is_active', true);
+        $data['slug'] = Str::slug($data['name']);
+
+        $category = BlogCategory::create($data);
+
+        return response()->json(['success' => true, 'message' => 'Kategori oluşturuldu.', 'data' => $category], 201);
+    }
+
+    public function updateBlogCategory(Request $request, BlogCategory $blogCategory): JsonResponse
+    {
+        $this->authorize('settings.manage');
+
+        $data = $request->validate([
+            'name'      => 'sometimes|required|string|max:191',
+            'color'     => 'nullable|string|max:7',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        if (isset($data['name'])) {
+            $data['slug'] = Str::slug($data['name']);
+        }
+        if (array_key_exists('is_active', $data)) {
+            $data['is_active'] = $request->boolean('is_active');
+        }
+
+        $blogCategory->update($data);
+
+        return response()->json(['success' => true, 'message' => 'Kategori güncellendi.', 'data' => $blogCategory->fresh()]);
+    }
+
+    public function destroyBlogCategory(BlogCategory $blogCategory): JsonResponse
+    {
+        $this->authorize('settings.manage');
+
+        if ($blogCategory->blogs()->count() > 0) {
+            return response()->json(['success' => false, 'message' => 'Bu kategoriye ait blog yazıları var. Önce onları silin veya kategoriyi değiştirin.'], 409);
+        }
+
+        $blogCategory->delete();
+
+        return response()->json(['success' => true, 'message' => 'Kategori silindi.']);
+    }
+
     // ─── Partner Logos ────────────────────────────────────────────────────────
 
     public function partners(): JsonResponse
@@ -216,13 +294,28 @@ class CmsController extends Controller
     public function storePartner(Request $request): JsonResponse
     {
         $this->authorize('settings.manage');
-        $data = $request->validate([
+
+        $rules = [
             'name'        => 'required|string|max:191',
             'website_url' => 'nullable|url',
             'alt_text'    => 'nullable|string|max:191',
             'sort_order'  => 'nullable|integer',
             'is_active'   => 'nullable|boolean',
-        ]);
+        ];
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Doğrulama hatası: ' . implode(' ', $validator->errors()->all()),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+        $data = array_filter($data, fn ($v) => $v !== null && $v !== '');
+
         if ($request->hasFile('logo')) {
             $data['logo_path'] = $request->file('logo')->store('partners', 'public');
         }
@@ -236,9 +329,11 @@ class CmsController extends Controller
         $data = $request->validate([
             'name'        => 'sometimes|required|string',
             'website_url' => 'nullable|url',
+            'alt_text'    => 'nullable|string|max:191',
             'sort_order'  => 'nullable|integer',
             'is_active'   => 'nullable|boolean',
         ]);
+        $data = array_filter($data, fn ($v) => $v !== null && $v !== '');
         if ($request->hasFile('logo')) {
             if ($partnerLogo->logo_path) Storage::disk('public')->delete($partnerLogo->logo_path);
             $data['logo_path'] = $request->file('logo')->store('partners', 'public');

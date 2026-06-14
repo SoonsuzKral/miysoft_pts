@@ -621,3 +621,298 @@
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Admin Dark Theme (header + content only — sidebar stays dark)
+   ═══════════════════════════════════════════════════════════════ */
+html[data-admin-theme="dark"] #admin-header {
+    background: #1e293b;
+    border-bottom-color: #334155;
+    box-shadow: none;
+}
+html[data-admin-theme="dark"] #admin-header .text-gray-600 {
+    color: #e2e8f0 !important;
+}
+html[data-admin-theme="dark"] #admin-header input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+html[data-admin-theme="dark"] #admin-header input:focus {
+    border-color: var(--pts-brand);
+}
+html[data-admin-theme="dark"] #admin-header input::placeholder {
+    color: #64748b;
+}
+html[data-admin-theme="dark"] #admin-header .pts-header-btn,
+html[data-admin-theme="dark"] #admin-header .pts-hamburger {
+    color: #94a3b8;
+}
+html[data-admin-theme="dark"] #admin-header .pts-header-btn:hover,
+html[data-admin-theme="dark"] #admin-header .pts-hamburger:hover {
+    background-color: rgba(255,255,255,0.06);
+    color: var(--pts-brand);
+}
+html[data-admin-theme="dark"] #admin-header #user-menu-wrap .flex.items-center.gap-2:hover {
+    background-color: rgba(255,255,255,0.06);
+}
+html[data-admin-theme="dark"] #admin-header .pts-user-avatar {
+    box-shadow: 0 0 10px rgba(2,224,251,0.2);
+}
+html[data-admin-theme="dark"] #admin-header #user-menu-wrap .text-gray-800 {
+    color: #f1f5f9 !important;
+}
+html[data-admin-theme="dark"] #admin-header #user-menu-wrap .text-gray-400 {
+    color: #64748b !important;
+}
+html[data-admin-theme="dark"] #admin-header svg.text-gray-400 {
+    color: #64748b !important;
+}
+
+/* ── Header dropdowns ── */
+html[data-admin-theme="dark"] .pts-dropdown {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
+}
+html[data-admin-theme="dark"] .pts-dropdown .text-gray-800,
+html[data-admin-theme="dark"] .pts-dropdown .text-gray-700,
+html[data-admin-theme="dark"] .pts-dropdown p,
+html[data-admin-theme="dark"] .pts-dropdown a {
+    color: #e2e8f0 !important;
+}
+html[data-admin-theme="dark"] .pts-dropdown a:hover {
+    background-color: rgba(255,255,255,0.06) !important;
+}
+html[data-admin-theme="dark"] .pts-dropdown .text-gray-400 {
+    color: #64748b !important;
+}
+html[data-admin-theme="dark"] .pts-dropdown .border-b,
+html[data-admin-theme="dark"] .pts-dropdown .border-t {
+    border-color: #334155 !important;
+}
+html[data-admin-theme="dark"] .pts-dropdown div:has(+ form) {
+    border-top-color: #334155 !important;
+}
+html[data-admin-theme="dark"] .pts-dropdown [style*="background:#f8fafc"] {
+    background: #0f172a !important;
+}
+html[data-admin-theme="dark"] .pts-dropdown [style*="background:#fef2f2"] {
+    background: rgba(220,38,38,0.1) !important;
+}
+html[data-admin-theme="dark"] #notif-dropdown .text-gray-800,
+html[data-admin-theme="dark"] #notif-dropdown .text-gray-600 {
+    color: #e2e8f0 !important;
+}
+html[data-admin-theme="dark"] #notif-dropdown .border-b,
+html[data-admin-theme="dark"] #notif-dropdown .border-t {
+    border-color: #334155 !important;
+}
+html[data-admin-theme="dark"] #notif-dropdown [style*="background:#f8fafc"] {
+    background: #0f172a !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Content Area Dark Theme — Tailwind utility overrides
+   ═══════════════════════════════════════════════════════════════ */
+html[data-admin-theme="dark"] #admin-content {
+    background-color: #0f172a;
+}
+
+/* ── Card backgrounds ── */
+html[data-admin-theme="dark"] #admin-content .bg-white {
+    background-color: #1e293b !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-gray-50 {
+    background-color: #0f172a !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-gray-100 {
+    background-color: #1e293b !important;
+}
+
+/* ── Card borders ── */
+html[data-admin-theme="dark"] #admin-content .border-gray-100 {
+    border-color: #334155 !important;
+}
+html[data-admin-theme="dark"] #admin-content .border-gray-200 {
+    border-color: #475569 !important;
+}
+html[data-admin-theme="dark"] #admin-content .border-gray-300 {
+    border-color: #64748b !important;
+}
+
+/* ── Text colors ── */
+html[data-admin-theme="dark"] #admin-content .text-gray-900 { color: #f8fafc !important; }
+html[data-admin-theme="dark"] #admin-content .text-gray-800 { color: #f1f5f9 !important; }
+html[data-admin-theme="dark"] #admin-content .text-gray-700 { color: #e2e8f0 !important; }
+html[data-admin-theme="dark"] #admin-content .text-gray-600 { color: #cbd5e1 !important; }
+html[data-admin-theme="dark"] #admin-content .text-gray-500 { color: #94a3b8 !important; }
+html[data-admin-theme="dark"] #admin-content .text-gray-400 { color: #64748b !important; }
+html[data-admin-theme="dark"] #admin-content .text-gray-300 { color: #475569 !important; }
+html[data-admin-theme="dark"] #admin-content .text-gray-200 { color: #334155 !important; }
+
+/* ── Hover states ── */
+html[data-admin-theme="dark"] #admin-content .hover\:bg-gray-50\/50:hover {
+    background-color: rgba(30,41,59,0.5) !important;
+}
+html[data-admin-theme="dark"] #admin-content .hover\:bg-gray-50:hover {
+    background-color: #1e293b !important;
+}
+html[data-admin-theme="dark"] #admin-content .hover\:bg-\[\#02E0FB\]\/5:hover {
+    background-color: rgba(2,224,251,0.1) !important;
+}
+
+/* ── KPI icon backgrounds ── */
+html[data-admin-theme="dark"] #admin-content .bg-cyan-50 {
+    background-color: rgba(2,224,251,0.15) !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-green-50 {
+    background-color: rgba(34,197,94,0.15) !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-yellow-50 {
+    background-color: rgba(234,179,8,0.15) !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-orange-50 {
+    background-color: rgba(249,115,22,0.15) !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-blue-50 {
+    background-color: rgba(59,130,246,0.15) !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-red-50 {
+    background-color: rgba(239,68,68,0.15) !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-purple-50 {
+    background-color: rgba(168,85,247,0.15) !important;
+}
+html[data-admin-theme="dark"] #admin-content .bg-pink-50 {
+    background-color: rgba(236,72,153,0.15) !important;
+}
+
+/* ── Status badges (izin durumları) ── */
+html[data-admin-theme="dark"] #admin-content .bg-yellow-100 { background-color: rgba(234,179,8,0.2) !important; }
+html[data-admin-theme="dark"] #admin-content .bg-green-100 { background-color: rgba(34,197,94,0.2) !important; }
+html[data-admin-theme="dark"] #admin-content .bg-red-100 { background-color: rgba(239,68,68,0.2) !important; }
+html[data-admin-theme="dark"] #admin-content .text-yellow-700 { color: #fcd34d !important; }
+html[data-admin-theme="dark"] #admin-content .text-green-700 { color: #86efac !important; }
+html[data-admin-theme="dark"] #admin-content .text-red-700 { color: #fca5a5 !important; }
+
+/* ── Renkli stat metinleri ── */
+html[data-admin-theme="dark"] #admin-content .text-green-600 { color: #4ade80 !important; }
+html[data-admin-theme="dark"] #admin-content .text-red-500 { color: #f87171 !important; }
+html[data-admin-theme="dark"] #admin-content .text-pink-600 { color: #f472b6 !important; }
+html[data-admin-theme="dark"] #admin-content .text-cyan-600 { color: #22d3ee !important; }
+html[data-admin-theme="dark"] #admin-content .text-yellow-600 { color: #fbbf24 !important; }
+html[data-admin-theme="dark"] #admin-content .text-pink-500 { color: #f472b6 !important; }
+html[data-admin-theme="dark"] #admin-content .text-\[#02E0FB\] { color: var(--pts-brand) !important; }
+html[data-admin-theme="dark"] #admin-content .hover\:text-\[#02E0FB\]:hover { color: var(--pts-brand) !important; }
+
+/* ── Progress bar divider ── */
+html[data-admin-theme="dark"] #admin-content .h-px.bg-gray-100 {
+    background-color: #334155 !important;
+}
+
+/* ── Alert / Warning banner ── */
+html[data-admin-theme="dark"] #admin-content .bg-amber-50 {
+    background-color: rgba(217,119,6,0.15) !important;
+}
+html[data-admin-theme="dark"] #admin-content .border-amber-200 {
+    border-color: rgba(217,119,6,0.3) !important;
+}
+html[data-admin-theme="dark"] #admin-content .text-amber-800,
+html[data-admin-theme="dark"] #admin-content .text-amber-500 {
+    color: #fcd34d !important;
+}
+html[data-admin-theme="dark"] #admin-content .text-amber-400 {
+    color: #fbbf24 !important;
+}
+html[data-admin-theme="dark"] #admin-content .hover\:text-amber-600:hover {
+    color: #f59e0b !important;
+}
+
+/* ── KPI Cards ── */
+html[data-admin-theme="dark"] .kpi-card {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+html[data-admin-theme="dark"] .kpi-card:hover {
+    border-color: #475569;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+html[data-admin-theme="dark"] .kpi-value {
+    color: #f1f5f9;
+}
+html[data-admin-theme="dark"] .kpi-label {
+    color: #64748b;
+}
+html[data-admin-theme="dark"] .kpi-sub {
+    color: #475569;
+}
+html[data-admin-theme="dark"] .kpi-badge-green {
+    background: rgba(22,163,74,0.15);
+    color: #4ade80;
+}
+html[data-admin-theme="dark"] .kpi-badge-red {
+    background: rgba(220,38,38,0.15);
+    color: #f87171;
+}
+html[data-admin-theme="dark"] .kpi-badge-orange {
+    background: rgba(234,88,12,0.15);
+    color: #fb923c;
+}
+html[data-admin-theme="dark"] .kpi-badge-blue {
+    background: rgba(37,99,235,0.15);
+    color: #60a5fa;
+}
+html[data-admin-theme="dark"] .kpi-badge-purple {
+    background: rgba(147,51,234,0.15);
+    color: #c084fc;
+}
+html[data-admin-theme="dark"] .kpi-badge-pink {
+    background: rgba(219,39,119,0.15);
+    color: #f472b6;
+}
+
+/* ── Skeleton loading ── */
+html[data-admin-theme="dark"] .skeleton-line,
+html[data-admin-theme="dark"] .skeleton-avatar {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%) !important;
+    background-size: 200% 100% !important;
+}
+
+/* ── Chart / Divider lines ── */
+html[data-admin-theme="dark"] #admin-content .border-gray-50 {
+    border-color: #1e293b !important;
+}
+
+/* ── Pending items hover ── */
+html[data-admin-theme="dark"] #admin-content .group:hover .group-hover\:text-\[\#02E0FB\] {
+    color: var(--pts-brand) !important;
+}
+
+/* ── Footer ── */
+html[data-admin-theme="dark"] footer {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dark Theme Toggle Button
+   ═══════════════════════════════════════════════════════════════ */
+.admin-theme-btn {
+    display: flex; align-items: center; gap: .3rem; padding: .3rem .5rem;
+    font-size: .75rem; font-weight: 500; color: #6b7280; cursor: pointer;
+    border-radius: .5rem; transition: all .15s; border: none;
+    background: transparent; white-space: nowrap;
+}
+.admin-theme-btn:hover {
+    background-color: rgba(2,224,251,0.08);
+    color: var(--pts-brand);
+}
+html[data-admin-theme="dark"] .admin-theme-btn {
+    color: #94a3b8;
+}
+html[data-admin-theme="dark"] .admin-theme-btn:hover {
+    background-color: rgba(255,255,255,0.06);
+    color: var(--pts-brand);
+}

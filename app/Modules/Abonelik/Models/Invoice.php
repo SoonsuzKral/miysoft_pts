@@ -1,4 +1,5 @@
-﻿<?php
+<?php
+
 namespace App\Modules\Abonelik\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -38,7 +39,8 @@ class Invoice extends Model
             'sent'      => 'Gönderildi',
             'paid'      => 'Ödendi',
             'overdue'   => 'Gecikmiş',
-            'cancelled' => 'İptal',
+            'cancelled' => 'İptal Edildi',
+            'refunded'  => 'İade Edildi',
             default     => $this->status,
         };
     }
@@ -49,7 +51,8 @@ class Invoice extends Model
             'paid'      => 'green',
             'overdue'   => 'red',
             'sent'      => 'blue',
-            'cancelled' => 'gray',
+            'cancelled',
+            'refunded'  => 'gray',
             default     => 'yellow',
         };
     }
@@ -57,5 +60,15 @@ class Invoice extends Model
     public function scopeForCompany($query, ?int $companyId)
     {
         return $query->where('company_id', $companyId);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->whereIn('status', ['draft', 'sent']);
+    }
+
+    public function scopeOverdue($query)
+    {
+        return $query->where('status', 'sent')->where('due_date', '<', now());
     }
 }

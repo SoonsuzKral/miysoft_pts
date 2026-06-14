@@ -21,9 +21,15 @@ use App\Modules\Abonelik\Controllers\SubscriptionController;
 use App\Modules\CMS\Controllers\CmsController;
 use App\Modules\Etkilesim\Controllers\AnnouncementController;
 use App\Modules\Surec\Controllers\ProcessController;
+use App\Modules\OzelSaat\Controllers\SpecialAttendanceController;
+
+// Abonelik süresi dolmuş kullanıcılar için (subscription middleware'i yok)
+Route::get('admin/subscription-expired', function () {
+    return view('admin.subscription.expired');
+})->middleware(['auth', 'verified', 'can:access_admin'])->name('admin.subscription.expired');
 
 Route::prefix('admin')
-    ->middleware(['auth', 'verified', 'can:access_admin'])
+    ->middleware(['auth', 'verified', 'can:access_admin', 'subscription'])
     ->name('admin.')
     ->group(function () {
 
@@ -67,6 +73,7 @@ Route::prefix('admin')
         });
         Route::prefix('personel/documents')->name('personel.documents.')->group(function () {
             Route::get('/{id}/download', [\App\Modules\Personel\Controllers\PersonelDocumentController::class, 'download'])->name('download');
+            Route::get('/{id}/view', [\App\Modules\Personel\Controllers\PersonelDocumentController::class, 'view'])->name('view');
             Route::delete('/{id}', [\App\Modules\Personel\Controllers\PersonelDocumentController::class, 'destroy'])->name('destroy');
         });
 
@@ -329,6 +336,12 @@ Route::prefix('admin')
                 Route::get('/{blog}/edit', [CmsController::class, 'blogEdit'])->name('edit');
                 Route::put('/{blog}', [CmsController::class, 'blogUpdate'])->name('update');
                 Route::delete('/{blog}', [CmsController::class, 'blogDestroy'])->name('destroy');
+                Route::prefix('categories')->name('categories.')->group(function () {
+                    Route::get('/', [CmsController::class, 'blogCategories'])->name('index');
+                    Route::post('/', [CmsController::class, 'storeBlogCategory'])->name('store');
+                    Route::put('/{blogCategory}', [CmsController::class, 'updateBlogCategory'])->name('update');
+                    Route::delete('/{blogCategory}', [CmsController::class, 'destroyBlogCategory'])->name('destroy');
+                });
             });
             Route::get('/partners', [CmsController::class, 'partners'])->name('partners');
             Route::post('/partners', [CmsController::class, 'storePartner'])->name('partners.store');
@@ -367,7 +380,13 @@ Route::prefix('admin')
 
         // ─── Tatil Yönetimi ───────────────────────────────────────
         Route::prefix('holidays')->name('holidays.')->group(function () {
-            Route::get('/', fn() => view('admin.holidays.index'))->name('index');
+            Route::get('/', [\App\Modules\Tatil\Controllers\HolidayController::class, 'indexView'])->name('index');
+            Route::get('/list', [\App\Modules\Tatil\Controllers\HolidayController::class, 'index'])->name('list');
+            Route::post('/', [\App\Modules\Tatil\Controllers\HolidayController::class, 'store'])->name('store');
+            Route::get('/{holiday}/edit', [\App\Modules\Tatil\Controllers\HolidayController::class, 'edit'])->name('edit');
+            Route::put('/{holiday}', [\App\Modules\Tatil\Controllers\HolidayController::class, 'update'])->name('update');
+            Route::delete('/{holiday}', [\App\Modules\Tatil\Controllers\HolidayController::class, 'destroy'])->name('destroy');
+            Route::post('/seed', [\App\Modules\Tatil\Controllers\HolidayController::class, 'seedYear'])->name('seed');
         });
 
         // ─── Raporlar ─────────────────────────────────────────────
@@ -379,7 +398,9 @@ Route::prefix('admin')
 
         // ─── Ayarlar ──────────────────────────────────────────────
         Route::prefix('settings')->name('settings.')->group(function () {
-            Route::get('/', fn() => view('admin.ayarlar.index'))->name('index');
+            Route::get('/', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('index');
+            Route::get('/load', [\App\Http\Controllers\Admin\SettingsController::class, 'load'])->name('load');
+            Route::post('/save', [\App\Http\Controllers\Admin\SettingsController::class, 'save'])->name('save');
         });
 
         // ─── Rol & Yetki (Production Ready) ──────────────────────
@@ -401,6 +422,7 @@ Route::prefix('admin')
 
         // ─── Bildirimler (Production Ready) ──────────────────────
         Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
             Route::get('/recent', [\App\Http\Controllers\NotificationController::class, 'recent'])->name('recent');
             Route::get('/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread');
             Route::post('/mark-read', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('markRead');
@@ -423,6 +445,16 @@ Route::prefix('admin')
             })->name('status');
         });
 
+        // ─── Özel Saat (Üst Düzey Personel Devam) ────────────────
+        Route::prefix('ozel-saat')->name('ozel-saat.')->group(function () {
+            Route::get('/', [SpecialAttendanceController::class, 'index'])->name('index');
+            Route::get('/list', [SpecialAttendanceController::class, 'list'])->name('list');
+            Route::post('/toggle', [SpecialAttendanceController::class, 'toggle'])->name('toggle');
+            Route::post('/mark', [SpecialAttendanceController::class, 'markAttendance'])->name('mark');
+            Route::post('/mark-all', [SpecialAttendanceController::class, 'markAllToday'])->name('mark-all');
+            Route::get('/report', [SpecialAttendanceController::class, 'monthlyReport'])->name('report');
+        });
+
         // ─── Medya Kütüphanesi ────────────────────────────────────
         Route::prefix('media')->name('media.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\MediaController::class, 'index'])->name('index');
@@ -431,6 +463,38 @@ Route::prefix('admin')
             Route::delete('/{id}', [\App\Http\Controllers\Admin\MediaController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-delete', [\App\Http\Controllers\Admin\MediaController::class, 'bulkDelete'])->name('bulk-delete');
         });
+
+        // ─── Lokasyon Yönetimi ─────────────────────────────────────
+        Route::prefix('lokasyon')->name('lokasyon.')->group(function () {
+            Route::get('/', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'indexView'])->name('index');
+            Route::get('/list', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'index'])->name('list');
+            Route::get('/create', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'create'])->name('create');
+            Route::post('/', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'store'])->name('store');
+            Route::get('/{lokasyon}/edit', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'edit'])->name('edit');
+            Route::put('/{lokasyon}', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'update'])->name('update');
+            Route::delete('/{lokasyon}', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'destroy'])->name('destroy');
+            Route::get('/map-data', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'mapData'])->name('map-data');
+            Route::post('/{lokasyon}/assign-personels', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'assignPersonels'])->name('assign-personels');
+            Route::post('/{lokasyon}/assign-by-department', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'assignByDepartment'])->name('assign-by-department');
+            Route::match(['delete', 'post'], '/{lokasyon}/remove-personel/{personel}', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'removePersonel'])->name('remove-personel');
+            Route::get('/{lokasyon}/personels', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'personels'])->name('personels');
+            Route::get('/check-distance', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'checkDistance'])->name('check-distance');
+            Route::post('/types', [\App\Modules\Lokasyon\Controllers\LocationController::class, 'storeType'])->name('types.store');
+        });
+
+        // ─── Özel Saat ────────────────────────────────────────────
+        Route::prefix('ozel-saat')->name('special-hour.')->group(function () {
+            Route::get('/', [\App\Modules\SpecialHour\Controllers\SpecialHourController::class, 'index'])->name('index');
+            Route::post('verify-password', [\App\Modules\SpecialHour\Controllers\SpecialHourController::class, 'verifyPassword'])->name('verify-password');
+            Route::post('set-password', [\App\Modules\SpecialHour\Controllers\SpecialHourController::class, 'setPassword'])->name('set-password');
+            Route::post('store', [\App\Modules\SpecialHour\Controllers\SpecialHourController::class, 'store'])->name('store');
+            Route::post('bulk-store', [\App\Modules\SpecialHour\Controllers\SpecialHourController::class, 'bulkStore'])->name('bulk-store');
+            Route::match(['put', 'patch'], '{specialHour}', [\App\Modules\SpecialHour\Controllers\SpecialHourController::class, 'update'])->name('update');
+            Route::delete('{specialHour}', [\App\Modules\SpecialHour\Controllers\SpecialHourController::class, 'destroy'])->name('destroy');
+        });
+
+        // ─── Dökümantasyon ─────────────────────────────────────────
+        Route::get('dokumantasyon/{category?}/{page?}', [\App\Modules\Dokumantasyon\Controllers\DokumantasyonController::class, 'index'])->name('dokumantasyon.page');
 
         // ─── Takvim ───────────────────────────────────────────────
         Route::get('calendar', fn() => view('admin.dashboard.index'))->name('calendar.index');
@@ -445,7 +509,11 @@ Route::prefix('admin')
             Route::get('kiosk', [\App\Http\Controllers\QrScanController::class, 'kiosk'])->name('kiosk');
             Route::get('personel/{personel}/qrcode', [\App\Http\Controllers\QrScanController::class, 'personelQrCode'])->name('personel.qrcode');
         });
+
     });
+
+
+
 
 
 

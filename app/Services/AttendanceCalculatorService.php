@@ -129,7 +129,7 @@ class AttendanceCalculatorService
 
         $workingDaysInMonth = collect($dailyResults)->filter(fn ($d) => !in_array($d['status'] ?? '', ['weekend', 'holiday']))->count();
 
-        $personel = \App\Modules\Personel\Models\Personel::find($personelId);
+        $personel = \App\Modules\Personel\Models\Personel::where('company_id', $companyId)->find($personelId);
 
         return [
             'personel_id'            => $personelId,

@@ -1,7 +1,7 @@
 # MİYSOFT PTS — Yapılacaklar (Roadmap)
 
-**Son Güncelleme:** 2026-03-20  
-**Mevcut Durum:** Auth/blog/CMS onarımları tamamlandı; vitrin hero glow ve blog detay (`blog_show`) stabilize edildi.
+**Son Güncelleme:** 2026-06-07  
+**Mevcut Durum:** Personel belge sistemi kesin çözüm — tüm 3 parça (liste, kaydet, indir) çalışıyor.
 
 ---
 
@@ -14,6 +14,10 @@
 | 2026-05-30 | **Prompt #03 — Hata Tespiti & Toplu Düzeltme:** Companies view'da `$key` undefined hatası giderildi (foreach destructuring syntax'ı `@php` bloğuna taşındı). Departments view'da `$allDepartments` undefined hatası giderildi (PHP loop kaldırıldı, JS ile AJAX select doldurma eklendi). Travel, Vehicle, Visitor, Service view'ları temiz (AJAX-tabanlı, PHP değişkeni yok). |
 | 2026-05-30 | **Prompt #04 — Show() Method Hatası & Route Düzeltmesi:** Travel, Vehicle, Visitor, Service controller'larında `show()` metodu olmamasına rağmen `Route::resource()` tüm CRUD route'larını oluşturuyordu. `->only(['index'])` ile sadece var olan metodlara kısıtlandı. Aynı sorun Department (`show`) ve Position (`show`, `edit`) controller'ları için de düzeltildi (`->except()`). |
 | 2026-05-30 | **Prompt #05 — Dashboard Geliştirme + İK Modülleri:** Dashboard'a son 5 izin talebi, son 5 personel kaydı, haftalık vardiya özeti ve yaklaşan tatiller panelleri eklendi (widgetData AJAX + JS rendering). İzin (Leave), Puantaj (Attendance), Vardiya (Shift) ve Onboarding (Process) modülleri incelendi — tümü zaten çalışır durumda, ek müdahale gerekmedi. |
+| 2026-06-06 | **Prompt #06 — Personel Belge Yükleme Sistemi Düzeltmesi:** PersonelController::store()'da `$request->file('documents')` foreach döngüsünde her eleman `['file' => UploadedFile]` array'iydi, `$file->isValid()` çağrısı "Call to member function on array" hatasıyla belgelerin sessizce kaydedilmemesine yol açıyordu. Aynı hata CompanyController::storePersonel()'da da vardı. update() metodunda belge işleme kodu tamamen eksikti — eklendi. JS'te FormData ile explicit Content-Type header'ı kaldırıldı (boundary bozulmasın diye). _card.blade.php ve _documents.blade.php'de geçerlilik tarihi gösterimi düzeltildi (Süresiz, X gün kaldı, Süresi Doldu). Storage symlink zaten vardı. |
+| 2026-06-07 | **Prompt #07 — Personel Belge Sistemi Tam Düzeltme:** Profil modalindeki "Belgeler" sekmesi server-side Blade render'dan AJAX-driven yapıya dönüştürüldü. `_card.blade.php`'deki `@foreach($personel->documents)` kaldırıldı, yerine `loadPersonelDocuments()` ile `GET /admin/personel/{id}/documents` endpoint'inden çekilen veriler JS ile render ediliyor. PersonelDocumentController::index()'e `days_left`, `display_text`, `display_class` alanları eklendi. `card()` metodundan gereksiz `documents` eager load kaldırıldı. `personel.js`'e `loadPersonelDocuments()` ve `getDocIcon()` fonksiyonları eklendi. |
+| 2026-06-07 | **Prompt #08 — Belge 404 ve Yükleme Kesin Düzeltme:** `personel_documents` tablosundaki 154 kaydın `file_path`'i `uploads/personel/{pid}/` eski formatından `personel-docs/{company}/{pid}/` yeni formatına güncellendi. `edit()` metoduna `$personel->load('documents')` eklendi. `_form.blade.php`'de mevcut belgeler download/delete butonlarıyla gösterilmeye başlandı. `personel.js`'e `deleteDocument()` eklendi, `openCardView()`'a `_docsLoaded` reset + `Alpine.initTree()` eklendi, hata durumunda yeniden denemeye izin verildi. **KRİTİK: `resources/views/partials/scripts.blade.php`'ye Alpine.js CDN'si eklendi** — 5 farklı view (`personel/_card`, `cms/index`, `companies/index`, `ozel-saat/index`, `travel/index`) Alpine kullanıyordu ama hiç yüklenmemişti, bu yüzden tab sistemleri çalışmıyordu. Storage dizini (`storage/app/private/personel-docs/`) oluşturuldu. Tüm cache'ler temizlendi. |
+| 2026-06-07 | **Prompt #09 — Personel Belge Sistemi Kesin Çözüm:** Profil kartı belgeler sekmesi yeniden yapılandırıldı (`belgelerContainer`/`belgelerLoading`/`belgelerListesi`/`belgelerBos`). JS `loadPersonelDocuments()` → `loadBelgeler()` olarak güncellendi. Storage diski `local` → `public` olarak değiştirildi (`storage/app/public/personel-documents/{personelId}/`). PersonelController::store/update ve PersonelDocumentController::store/download/destroy `public` disk kullanacak şekilde güncellendi. Klasör otomatik oluşturma eklendi. Cache'ler temizlendi. |
 | 2026-03-20 | **Auth & rol:** İlk kayıt olan kullanıcıya `super_admin`, sonrakilere `company_admin`; e-posta çakışması `back()->withErrors(['email' => 'Bu e-posta zaten kullanımda'])`. Ücretsiz deneme (`storeFreeTrial`) aynı zarif e-posta kontrolü; `unique` validation kaldırıldı. |
 | 2026-03-20 | **Rotalar:** `web.php` / `admin.php` yorumları — `auth` middleware'inin login/register'a bulaşmadığı netleştirildi. |
 | 2026-03-20 | **Vitrin hero:** `isolate`, `-z-10`, Tailwind `blur-3xl` / düşük opacity; “Yeniden Keşfedin” için `relative isolate` içinde sınırlı glow. |
@@ -218,7 +222,7 @@ php artisan queue:work --daemon --queue=default,notifications,exports
 |---------|-------|-------------|
 | Veritabanı (50 tablo) | ✅ Tamamlandı | 100% |
 | Migration sıralaması | ✅ Düzeltildi | 100% |
-| Personel modülü | ✅ Tam CRUD | 95% |
+| Personel modülü | ✅ Tam CRUD (belge yükleme + AJAX görüntüleme + edit formunda mevcut belgeler + DB path tutarlılığı) | 100% |
 | İzin modülü | ✅ Onay akışı | 90% |
 | Puantaj modülü | ✅ Motor + UI | 85% |
 | Vardiya modülü | ✅ Takvim + Atama | 80% |
@@ -241,7 +245,7 @@ php artisan queue:work --daemon --queue=default,notifications,exports
 | Raporlar | ⚠️ UI hazır, gerçek export eksik | 50% |
 | API Layer | ❌ Başlanmadı | 0% |
 | Testler | ⚠️ İskelet hazır | 20% |
-| **GENEL** | | **~90%** |
+| **GENEL** | | **~92%** |
 
 ---
 

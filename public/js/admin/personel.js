@@ -142,22 +142,247 @@ function openEditModal(id) {
 function submitPersonelForm(url = PERSONEL_CONFIG.store, method = 'POST') {
     const form = document.getElementById('personelForm');
     if (!form) { toast('error', 'Form bulunamadı'); return; }
-    const data = Object.fromEntries(new FormData(form).entries());
-    axios({ method, url, data, headers: { 'Content-Type': 'application/json' } })
-        .then(res => { closeModal(); toast('success', res.data.message); loadPersonelTable(CURRENT_PAGE); })
-        .catch(err => {
-            const msg = err.response?.data?.message || err.response?.data?.errors || 'Kaydetme başarısız';
-            toast('error', typeof msg === 'string' ? msg : Object.values(msg).flat().join(', '));
+
+    const btn = document.querySelector('#modalFooter button:last-child');
+    if (btn) { btn.disabled = true; btn.textContent = 'Kaydediliyor...'; btn.classList.add('opacity-60', 'cursor-not-allowed'); }
+
+    const docEntries = document.querySelectorAll('.doc-entry');
+    const hasDocs = Array.from(docEntries).some(e => e.querySelector('.doc-file').files[0]);
+
+    const doRequest = (config) => {
+        axios(config)
+            .then(res => { closeModal(); toast('success', res.data.message); loadPersonelTable(CURRENT_PAGE); })
+            .catch(err => {
+                if (btn) { btn.disabled = false; btn.textContent = method === 'POST' && url !== PERSONEL_CONFIG.store ? 'Güncelle' : 'Kaydet'; btn.classList.remove('opacity-60', 'cursor-not-allowed'); }
+                const msg = err.response?.data?.message || err.response?.data?.errors || 'Kaydetme başarısız';
+                toast('error', typeof msg === 'string' ? msg : Object.values(msg).flat().join(', '));
+            });
+    };
+
+    if (hasDocs) {
+        const formData = new FormData(form);
+        docEntries.forEach((entry, i) => {
+            const file = entry.querySelector('.doc-file').files[0];
+            const name = entry.querySelector('.doc-name').value.trim();
+            if (file && name) {
+                formData.append(`documents[${i}][file]`, file);
+                formData.append(`documents[${i}][type]`, name);
+                const isIndefinite = entry.querySelector('.doc-indefinite')?.checked;
+                if (!isIndefinite) {
+                    const expiry = entry.querySelector('.doc-expiry').value;
+                    if (expiry) formData.append(`documents[${i}][expiry_at]`, expiry);
+                }
+            }
         });
+        doRequest({ method, url, data: formData });
+    } else {
+        const data = Object.fromEntries(new FormData(form).entries());
+        doRequest({ method, url, data, headers: { 'Content-Type': 'application/json' } });
+    }
+}
+
+// ─── Belge Yönetimi (Personel Oluşturma/Düzenleme Formu) ─────────
+let docIndex = 0;
+
+function addDocumentEntry() {
+    const container = document.getElementById('documentEntries');
+    const emptyMsg = document.getElementById('docEmptyMessage');
+    if (emptyMsg) emptyMsg.remove();
+
+    const index = docIndex++;
+    const html = `
+    <div class="doc-entry bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow" id="docEntry-${index}">
+        <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Belge Adı</label>
+                <input type="text" class="doc-name w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB] focus:ring-1 focus:ring-[#02E0FB]" placeholder="Örn: Banka Sözleşmesi, İş Sözleşmesi, SGK Bildirgesi ...">
+            </div>
+            <button type="button" onclick="removeDocumentEntry(${index})"
+                class="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all shrink-0" title="Kaldır">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="flex-1">
+                <div class="doc-dropzone relative border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-[#02E0FB] hover:bg-[#02E0FB]/5 transition-all cursor-pointer text-center"
+                     onclick="document.getElementById('docFile-${index}').click()"
+                     ondragover="event.preventDefault(); this.classList.add('border-[#02E0FB]', 'bg-[#02E0FB]/5')"
+                     ondrop="handleDocDrop(event, ${index})">
+                    <input type="file" id="docFile-${index}" class="doc-file hidden" accept=".pdf,.jpg,.jpeg,.png,.docx,.doc,.xlsx,.xls,.csv"
+                        onchange="previewDocFile(this, ${index})">
+                    <div id="docUploadPlaceholder-${index}">
+                        <svg class="w-8 h-8 text-gray-300 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <p class="text-xs text-gray-400">Dosya seçmek için tıklayın</p>
+                    </div>
+                    <div id="docFileInfo-${index}" class="hidden flex items-center gap-2">
+                        <svg class="w-6 h-6 text-[#02E0FB] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <div class="text-left">
+                            <p class="text-sm font-medium text-gray-700" id="docFileName-${index}"></p>
+                            <p class="text-xs text-gray-400" id="docFileSize-${index}"></p>
+                        </div>
+                        <button type="button" onclick="clearDocFile(${index})" class="ml-auto p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors" title="Dosyayı değiştir">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG, DOCX, XLSX — Max 10MB</p>
+            </div>
+            <div class="shrink-0" style="min-width:210px">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Son Geçerlilik</label>
+                <div class="flex items-center gap-1.5">
+                    <input type="date" class="doc-expiry flex-1 min-w-0 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB] focus:ring-1 focus:ring-[#02E0FB]">
+                    <label class="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap cursor-pointer bg-gray-50 px-2 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors shrink-0">
+                        <input type="checkbox" class="doc-indefinite rounded border-gray-300 text-[#02E0FB] focus:ring-[#02E0FB]" onchange="toggleIndefinite(${index})">
+                        Süresiz
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+function previewDocFile(input, index) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'];
+    if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|jpg|jpeg|png|docx|doc|xlsx|xls|csv)$/i)) {
+        toast('warning', 'Geçersiz dosya türü. PDF, JPG, PNG, DOCX, XLSX dosyaları kabul edilir.');
+        input.value = '';
+        return;
+    }
+
+    document.getElementById(`docUploadPlaceholder-${index}`).classList.add('hidden');
+    const info = document.getElementById(`docFileInfo-${index}`);
+    info.classList.remove('hidden');
+    document.getElementById(`docFileName-${index}`).textContent = file.name;
+    document.getElementById(`docFileSize-${index}`).textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+    document.getElementById(`docFile-${index}`).closest('.doc-dropzone').classList.remove('border-gray-200');
+    document.getElementById(`docFile-${index}`).closest('.doc-dropzone').classList.add('border-[#02E0FB]', 'bg-[#02E0FB]/5');
+}
+
+function handleDocDrop(e, index) {
+    e.preventDefault();
+    const input = document.getElementById(`docFile-${index}`);
+    input.files = e.dataTransfer.files;
+    previewDocFile(input, index);
+}
+
+function clearDocFile(index) {
+    const input = document.getElementById(`docFile-${index}`);
+    input.value = '';
+    document.getElementById(`docUploadPlaceholder-${index}`).classList.remove('hidden');
+    document.getElementById(`docFileInfo-${index}`).classList.add('hidden');
+    const dz = document.getElementById(`docFile-${index}`).closest('.doc-dropzone');
+    dz.classList.remove('border-[#02E0FB]', 'bg-[#02E0FB]/5');
+    dz.classList.add('border-gray-200');
+}
+
+function toggleIndefinite(index) {
+    const entry = document.getElementById(`docEntry-${index}`);
+    if (!entry) return;
+    const dateInput = entry.querySelector('.doc-expiry');
+    const cb = entry.querySelector('.doc-indefinite');
+    if (cb.checked) {
+        dateInput.disabled = true;
+        dateInput.value = '';
+    } else {
+        dateInput.disabled = false;
+    }
+}
+
+function removeDocumentEntry(index) {
+    const el = document.getElementById(`docEntry-${index}`);
+    if (el) {
+        el.remove();
+        const container = document.getElementById('documentEntries');
+        if (!container.querySelector('.doc-entry')) {
+            container.innerHTML = `<p class="text-xs text-gray-400 text-center py-3 bg-gray-50 rounded-lg border border-dashed border-gray-200" id="docEmptyMessage">Henüz belge eklenmedi. "Belge Ekle" butonuna tıklayarak belge yükleyebilirsiniz.</p>`;
+        }
+    }
 }
 
 function openCardView(id) {
+    _docsLoaded[id] = false;
     axios.get(PERSONEL_CONFIG.card(id)).then(res => {
         const area = document.getElementById('personelCardArea');
         area.innerHTML = res.data.html;
         area.classList.remove('hidden');
         area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (window.Alpine) {
+            const root = area.querySelector('[x-data]');
+            if (root) Alpine.initTree(root);
+        }
     }).catch(() => toast('error', 'Kart yüklenemedi'));
+}
+
+function getDocIcon(ext) {
+    const map = { pdf: '📄', jpg: '🖼️', jpeg: '🖼️', png: '🖼️', docx: '📝', doc: '📝', xlsx: '📊', xls: '📊', csv: '📊' };
+    return map[ext] || '📎';
+}
+
+var _docsLoaded = {};
+
+function loadBelgeler() {
+    const root = document.querySelector('[x-data*="tab"]');
+    if (!root) return;
+    const personelId = root.dataset.personelId;
+    if (!personelId) return;
+    if (_docsLoaded[personelId]) return;
+    _docsLoaded[personelId] = true;
+
+    const container = document.getElementById('belgelerContainer');
+    if (!container) return;
+    container.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">Yükleniyor...</p>';
+
+    axios.get('/admin/personel/' + personelId + '/documents').then(res => {
+        const docs = res.data.data;
+        if (!docs || !docs.length) {
+            container.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">Henüz belge eklenmemiş</p>';
+            return;
+        }
+
+        let html = '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">';
+        docs.forEach(doc => {
+            const icon = getDocIcon(doc.ext);
+            html += '<div class="flex items-center gap-3 p-3 bg-gray-50/50 rounded-xl border border-gray-50 hover:border-gray-200 transition-all group">' +
+                '<div class="w-9 h-9 rounded-xl bg-[#02E0FB]/10 flex items-center justify-center shrink-0">' +
+                '<span class="text-base">' + icon + '</span></div>' +
+                '<div class="min-w-0 flex-1">' +
+                '<p class="text-sm font-semibold text-gray-800 truncate">' + esc(doc.type) + '</p>' +
+                '<p class="text-xs text-gray-400">' + esc(doc.original_name || doc.file_path.split('/').pop()) +
+                ' <span class="' + doc.display_class + '">· ' + doc.display_text + '</span></p></div>' +
+                '<div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">' +
+                (doc.view_url ? '<a href="' + doc.view_url + '" target="_blank" class="p-1.5 text-gray-400 hover:text-[#02E0FB] hover:bg-blue-50 rounded-lg transition-all" title="Görüntüle">' +
+                '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' +
+                '</a>' : '') +
+                '<a href="' + doc.download_url + '" class="p-1.5 text-gray-400 hover:text-[#02E0FB] hover:bg-blue-50 rounded-lg transition-all" title="İndir">' +
+                '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
+                '</a></div></div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }).catch(() => {
+        container.innerHTML = '<p class="text-red-400 text-sm text-center py-8">Belgeler yüklenemedi</p>';
+        _docsLoaded[personelId] = false;
+    });
+}
+
+function deleteDocument(docId) {
+    confirmDelete(`/admin/personel/documents/${docId}`, () => {
+        const el = document.getElementById(`doc-${docId}`);
+        if (el) el.remove();
+    });
 }
 
 function exportPersonel(type) {

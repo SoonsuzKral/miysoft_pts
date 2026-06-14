@@ -1,5 +1,6 @@
 @extends('frontend._layout')
-@section('title', ($post->title ?? 'Blog Yazısı') . ' — MİYSOFT Blog')
+@section('title', ($post->meta_title ?? $post->title ?? 'Blog Yazısı') . ' — MİYSOFT Blog')
+@section('meta_description', $post->meta_description ?? '')
 
 @section('content')
 <section class="relative isolate overflow-hidden py-20 bg-gradient-to-b from-gray-950 to-gray-900">

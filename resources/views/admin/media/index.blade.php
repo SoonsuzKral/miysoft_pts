@@ -2,21 +2,19 @@
 @section('title', 'Medya Kütüphanesi')
 
 @section('page_header')
-<div class="flex items-center justify-between">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">Medya Kütüphanesi</h1>
-        <p class="text-sm text-gray-500 mt-1">Yüklenen tüm dosyaları görüntüleyin ve yönetin.</p>
-    </div>
-    <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="flex items-center gap-2 px-4 py-2.5 bg-[#02E0FB] hover:bg-cyan-400 text-gray-900 rounded-xl text-sm font-semibold transition-all">
+<div>
+    <h1 class="text-2xl font-bold text-gray-900">Medya Kütüphanesi</h1>
+    <p class="text-sm text-gray-500 mt-1">Yüklenen tüm dosyaları görüntüleyin ve yönetin.</p>
+</div>
+<button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-[#02E0FB] hover:bg-cyan-400 text-gray-900 rounded-xl text-sm font-semibold transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
         Dosya Yükle
     </button>
-</div>
 @endsection
 
 @section('content')
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
-    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+    <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div class="flex items-center gap-3">
             <select id="mimeFilter" onchange="loadMedia()" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#02E0FB]">
                 <option value="">Tümü</option>
@@ -173,31 +171,44 @@ function uploadFile(input) {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('_token', '{{ csrf_token() }}');
 
     document.getElementById('uploadProgress').classList.remove('hidden');
     document.getElementById('uploadResult').classList.add('hidden');
 
-    axios.post('{{ route('admin.media.upload') }}', formData, {
-        headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' },
-        onUploadProgress: (e) => {
-            if (!e.total) return;
-            document.getElementById('progressBar').style.width = Math.round((e.loaded * 100) / e.total) + '%';
-            document.getElementById('uploadStatus').textContent = `%${Math.round((e.loaded * 100) / e.total)} yüklendi...`;
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '{{ route('admin.media.upload') }}');
+    xhr.setRequestHeader('Accept', 'application/json');
+
+    xhr.upload.onprogress = (e) => {
+        if (!e.lengthComputable) return;
+        const pct = Math.round((e.loaded * 100) / e.total);
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('uploadStatus').textContent = '%' + pct + ' yüklendi...';
+    };
+
+    xhr.onload = () => {
+        document.getElementById('uploadProgress').classList.add('hidden');
+        if (xhr.status >= 200 && xhr.status < 300) {
+            const res = JSON.parse(xhr.responseText);
+            document.getElementById('uploadResult').classList.remove('hidden');
+            document.getElementById('uploadResult').innerHTML = '✅ ' + res.message;
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('fileInput').value = '';
+            loadMedia();
+            setTimeout(() => document.getElementById('uploadResult').classList.add('hidden'), 3000);
+        } else {
+            const res = JSON.parse(xhr.responseText);
+            document.getElementById('uploadStatus').textContent = 'Hata: ' + (res.message || 'Yükleme başarısız');
         }
-    }).then(res => {
+    };
+
+    xhr.onerror = () => {
         document.getElementById('uploadProgress').classList.add('hidden');
-        document.getElementById('uploadResult').classList.remove('hidden');
-        document.getElementById('uploadResult').innerHTML = '✅ ' + res.data.message;
-        document.getElementById('progressBar').style.width = '0%';
-        document.getElementById('fileInput').value = '';
-        loadMedia();
-        setTimeout(() => document.getElementById('uploadResult').classList.add('hidden'), 3000);
-    }).catch(err => {
-        document.getElementById('uploadProgress').classList.add('hidden');
-        document.getElementById('uploadStatus').textContent = 'Hata oluştu';
-        const msg = err.response?.data?.message || 'Yükleme başarısız';
-        toast('error', msg);
-    });
+        document.getElementById('uploadStatus').textContent = 'Yükleme başarısız';
+    };
+
+    xhr.send(formData);
 }
 
 function previewMedia(id, url, type, filename, size, mime) {
@@ -212,12 +223,23 @@ function previewMedia(id, url, type, filename, size, mime) {
 
 function deleteMedia(id) {
     if (!confirm('Bu dosyayı silmek istediğinize emin misiniz?')) return;
-    fetch(`{{ route('admin.media.destroy', '') }}/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) { toast('success', res.message); loadMedia(); document.getElementById('previewModal').classList.add('hidden'); }
-            else toast('error', res.message);
-        });
+    fetch('/admin/media/' + id, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) { loadMedia(); document.getElementById('previewModal').classList.add('hidden'); }
+        else alert(res.message);
+    });
+}
+
+function toast(type, msg) {
+    const el = document.createElement('div');
+    el.className = 'fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ' + (type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
 }
 </script>
 @endpush

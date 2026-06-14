@@ -904,7 +904,7 @@ function loadMonthlyOverview() {
                         <span class="font-medium text-gray-800">${s.personel_name}</span>
                     </div>
                 </td>
-                <td data-label="Departman" class="px-4 py-3 text-xs text-gray-500">${s.personel_name ? '—' : '—'}</td>
+                <td data-label="Departman" class="px-4 py-3 text-xs text-gray-500">${s.department || '—'}</td>
                 <td data-label="Çalışma Günü" class="px-4 py-3 text-center font-semibold text-gray-800">${s.present_days || 0}/${s.working_days_in_month || 0}</td>
                 <td data-label="Toplam Saat" class="px-4 py-3 text-center font-semibold text-gray-800">${s.total_work_hours || 0} sa</td>
                 <td data-label="Ort. Saat" class="px-4 py-3 text-center text-gray-600">${s.avg_work_hours || 0} sa</td>

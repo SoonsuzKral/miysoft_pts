@@ -58,4 +58,27 @@
             </select>
         </div>
     </div>
+
+    {{-- Belgeler --}}
+    <div class="border-t border-gray-100 pt-4 mt-2">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-semibold text-gray-700">Belgeler</h4>
+            <button type="button" onclick="addDocumentEntry()"
+                class="text-xs font-medium text-[#02E0FB] hover:text-cyan-600 transition-colors flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Belge Ekle
+            </button>
+        </div>
+
+        <div id="documentEntries" class="space-y-2">
+            <p class="text-xs text-gray-400 text-center py-3 bg-gray-50 rounded-lg border border-dashed border-gray-200" id="docEmptyMessage">Henüz belge eklenmedi. "Belge Ekle" butonuna tıklayarak belge yükleyebilirsiniz.</p>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Personel kaydedilirken belgeler otomatik olarak yüklenecektir. PDF, JPG, PNG, DOCX, XLSX — Max 10MB
+        </p>
+    </div>
 </form>

@@ -1,4 +1,4 @@
-<div class="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden" x-data="{ tab: 'info' }">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden" x-data="{ tab: 'info' }" data-personel-id="{{ $personel->id }}">
     {{-- Header --}}
     <div class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 px-6 py-6 relative">
         <div class="absolute top-0 right-0 w-48 h-48 bg-[#02E0FB]/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
@@ -35,15 +35,15 @@
     <div class="border-b border-gray-100 px-6 overflow-x-auto">
         <div class="flex gap-4 -mb-px min-w-max">
             @foreach([
-                ['info', 'Genel Bilgiler', 'M20 12H4'],
-                ['contact', 'İletişim', 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8'],
-                ['leaves', 'İzinler', 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
-                ['attendance', 'Puantaj', 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                ['assets', 'Zimmetler', 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
-                ['docs', 'Belgeler', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
-                ['activity', 'Aktivite', 'M13 10V3L4 14h7v7l9-11h-7z'],
-            ] as [$key, $label, $icon])
-            <button @click="tab = '{{ $key }}'"
+                ['info', 'Genel Bilgiler', 'M20 12H4', null],
+                ['contact', 'İletişim', 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8', null],
+                ['leaves', 'İzinler', 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', null],
+                ['attendance', 'Puantaj', 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', null],
+                ['assets', 'Zimmetler', 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', null],
+                ['docs', 'Belgeler', 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'loadBelgeler'],
+                ['activity', 'Aktivite', 'M13 10V3L4 14h7v7l9-11h-7z', null],
+            ] as [$key, $label, $icon, $onShow])
+            <button @click="tab = '{{ $key }}'; {{ $onShow ? $onShow . '()' : '' }}"
                 :class="tab === '{{ $key }}' ? 'border-[#02E0FB] text-[#02E0FB]' : 'border-transparent text-gray-400 hover:text-gray-600'"
                 class="py-3 px-1 text-xs font-semibold border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icon }}"/></svg>
@@ -221,38 +221,9 @@
 
         {{-- DOCS TAB --}}
         <div x-show="tab === 'docs'">
-            <h3 class="font-bold text-gray-800 text-xs uppercase tracking-wider mb-3">Belgeler</h3>
-            @if($personel->documents && $personel->documents->count() > 0)
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    @foreach($personel->documents as $doc)
-                    <div class="flex items-center gap-3 p-3 bg-gray-50/50 rounded-xl border border-gray-50 hover:border-gray-200 transition-all group">
-                        <div class="w-9 h-9 rounded-xl bg-[#02E0FB]/10 flex items-center justify-center shrink-0">
-                            @php $ext = pathinfo($doc->file_path, PATHINFO_EXTENSION); @endphp
-                            <span class="text-base">{{ match(strtolower($ext)) {'pdf'=>'📄', 'jpg','jpeg','png'=>'🖼️', 'docx','doc'=>'📝', default=>'📎'} }}</span>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <p class="text-sm font-semibold text-gray-800 truncate">{{ $doc->type }}</p>
-                            <p class="text-xs text-gray-400">{{ $doc->original_name ?? basename($doc->file_path) }}
-                                @if($doc->expiry_at)
-                                    @php $expiry = Carbon\Carbon::parse($doc->expiry_at) @endphp
-                                    @if($expiry->isPast()) <span class="text-red-500">· Süresi Dolmuş</span>
-                                    @elseif($expiry->diffInDays(now()) <= 30) <span class="text-amber-500">· {{ $expiry->diffInDays(now()) }} gün kaldı</span>
-                                    @endif
-                                @endif
-                            </p>
-                        </div>
-                        <div class="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                            <a href="{{ route('admin.personel.documents.download', $doc->id) }}"
-                               class="p-1.5 text-gray-400 hover:text-[#02E0FB] hover:bg-blue-50 rounded-lg transition-all" title="İndir">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            </a>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            @else
-                <p class="text-center text-gray-400 py-6 text-sm bg-gray-50/50 rounded-xl">Belge bulunamadı</p>
-            @endif
+            <div id="belgelerContainer">
+                <p class="text-gray-400 text-sm text-center py-8">Yükleniyor...</p>
+            </div>
         </div>
 
         {{-- ACTIVITY TAB --}}

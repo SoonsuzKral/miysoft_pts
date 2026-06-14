@@ -98,6 +98,10 @@
             <h3 class="text-lg font-semibold text-gray-800">Blog Yazıları</h3>
             <div class="flex items-center gap-3">
                 <span class="text-sm text-gray-400">{{ $blogCount }} yazı</span>
+                <button onclick="loadCategories()" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    Kategoriler
+                </button>
                 <button onclick="openBlogCreate()" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Yeni Yazı
@@ -167,6 +171,20 @@
 
 @endsection
 
+{{-- Global Modal (blog, partner vb. için) --}}
+<div id="globalModal" class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-5 border-b border-gray-100">
+            <h3 id="modalTitle" class="text-lg font-bold text-gray-900">Başlık</h3>
+            <button onclick="this.closest('#globalModal').classList.add('hidden')" class="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div id="modalBody" class="p-5"></div>
+        <div id="modalFooter" class="flex items-center justify-end gap-2 p-5 border-t border-gray-100 bg-gray-50 rounded-b-2xl"></div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 const CMS_URLS = {
@@ -179,6 +197,12 @@ const CMS_URLS = {
         edit:    id => `/admin/cms/blog/${id}/edit`,
         update:  id => `/admin/cms/blog/${id}`,
         destroy: id => `/admin/cms/blog/${id}`,
+        categories: {
+            list:    '{{ route("admin.cms.blog.categories.index") }}',
+            store:   '{{ route("admin.cms.blog.categories.store") }}',
+            update:  id => `/admin/cms/blog/categories/${id}`,
+            destroy: id => `/admin/cms/blog/categories/${id}`,
+        },
     },
     partners: {
         list:    '{{ route("admin.cms.partners") }}',
@@ -217,6 +241,7 @@ const SECTIONS = {
         { key: 'footer.email',         label: 'İletişim E-posta', type: 'text' },
         { key: 'footer.phone',         label: 'Telefon', type: 'text' },
         { key: 'footer.address',       label: 'Adres', type: 'textarea' },
+        { key: 'footer.social.facebook', label: 'Facebook URL', type: 'url' },
         { key: 'footer.social.twitter', label: 'Twitter/X URL', type: 'url' },
         { key: 'footer.social.linkedin', label: 'LinkedIn URL', type: 'url' },
         { key: 'footer.social.instagram', label: 'Instagram URL', type: 'url' },
@@ -274,7 +299,7 @@ function saveSection(section) {
         return { key: field.key, value: el?.value || '', type: field.type };
     });
 
-    axios.post(CMS_URLS.upsert, { items }).then(res => {
+    axios.post(CMS_URLS.upsert, { section, items }).then(res => {
         toast('success', res.data.message);
     });
 }
@@ -314,6 +339,151 @@ function loadBlogs() {
                     </div>
                 </td>
             </tr>`).join('');
+    });
+}
+
+// ─── Blog Kategorileri ────────────────────────────────────────────────────────
+
+function loadCategories() {
+    axios.get(CMS_URLS.blog.categories.list).then(res => {
+        const cats = res.data.data;
+        document.getElementById('modalTitle').textContent = 'Blog Kategorileri';
+        let html = '';
+        if (!cats.length) {
+            html = `<p class="text-sm text-gray-400 text-center py-6">Henüz kategori yok</p>`;
+        } else {
+            html = `<table class="w-full text-sm"><thead class="bg-gray-50 border-b border-gray-100">
+                <tr><th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Kategori</th>
+                <th class="px-3 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Yazı</th>
+                <th class="px-3 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Durum</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">İşlem</th></tr></thead><tbody>`;
+            cats.forEach(c => {
+                html += `<tr class="hover:bg-gray-50 border-b border-gray-50">
+                    <td class="px-3 py-2.5 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full inline-block" style="background:${c.color || '#02E0FB'}"></span>
+                        <span class="font-medium text-gray-800">${c.name}</span>
+                    </td>
+                    <td class="px-3 py-2.5 text-center text-gray-500">${c.blogs_count}</td>
+                    <td class="px-3 py-2.5 text-center">
+                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                            ${c.is_active ? 'Aktif' : 'Pasif'}
+                        </span>
+                    </td>
+                    <td class="px-3 py-2.5 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            <button onclick="openCategoryEdit(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.color || ''}', ${c.is_active})" class="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </button>
+                            <button onclick="deleteCategory(${c.id})" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+        }
+        html += `<div class="mt-4 pt-4 border-t border-gray-100">
+            <button onclick="openCategoryCreate()" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Yeni Kategori
+            </button>
+        </div>`;
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('modalFooter').innerHTML = `
+            <button onclick="document.getElementById('globalModal').classList.add('hidden')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Kapat</button>`;
+        document.getElementById('globalModal').classList.remove('hidden');
+    });
+}
+
+function openCategoryCreate() {
+    document.getElementById('modalTitle').textContent = 'Yeni Blog Kategorisi';
+    document.getElementById('modalBody').innerHTML = `
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Adı <span class="text-red-500">*</span></label>
+                <input type="text" id="catName" placeholder="Örn: İK Yönetimi" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Renk</label>
+                <div class="flex items-center gap-3">
+                    <input type="color" id="catColor" value="#02E0FB" class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5">
+                    <span class="text-xs text-gray-400">Kategori etiketi rengi</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="catActive" checked class="rounded border-gray-300 text-[#02E0FB] focus:ring-[#02E0FB]">
+                <label for="catActive" class="text-sm text-gray-700">Aktif</label>
+            </div>
+        </div>
+        <p id="catError" class="text-sm text-red-500 mt-2 hidden">Kategori adı zorunludur.</p>`;
+    document.getElementById('modalFooter').innerHTML = `
+        <button onclick="document.getElementById('globalModal').classList.add('hidden')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">İptal</button>
+        <button onclick="submitCategory()" class="px-4 py-2 text-sm text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg font-medium">Kaydet</button>`;
+    document.getElementById('globalModal').classList.remove('hidden');
+}
+
+function openCategoryEdit(id, name, color, isActive) {
+    document.getElementById('modalTitle').textContent = 'Kategori Düzenle';
+    document.getElementById('modalBody').innerHTML = `
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Kategori Adı <span class="text-red-500">*</span></label>
+                <input type="text" id="catName" value="${name}" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Renk</label>
+                <div class="flex items-center gap-3">
+                    <input type="color" id="catColor" value="${color || '#02E0FB'}" class="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5">
+                    <span class="text-xs text-gray-400">Kategori etiketi rengi</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="catActive" ${isActive ? 'checked' : ''} class="rounded border-gray-300 text-[#02E0FB] focus:ring-[#02E0FB]">
+                <label for="catActive" class="text-sm text-gray-700">Aktif</label>
+            </div>
+        </div>
+        <p id="catError" class="text-sm text-red-500 mt-2 hidden">Kategori adı zorunludur.</p>`;
+    document.getElementById('modalFooter').innerHTML = `
+        <button onclick="document.getElementById('globalModal').classList.add('hidden')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">İptal</button>
+        <button onclick="submitCategory('${CMS_URLS.blog.categories.update(id)}','PUT')" class="px-4 py-2 text-sm text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg font-medium">Güncelle</button>`;
+    document.getElementById('globalModal').classList.remove('hidden');
+}
+
+function submitCategory(url = CMS_URLS.blog.categories.store, method = 'POST') {
+    const name = document.getElementById('catName').value;
+    const error = document.getElementById('catError');
+    if (!name) { error.classList.remove('hidden'); return; }
+    error.classList.add('hidden');
+
+    const payload = {
+        name: name,
+        color: document.getElementById('catColor').value,
+        is_active: document.getElementById('catActive').checked,
+    };
+
+    const run = method === 'PUT'
+        ? axios.put(url, payload)
+        : axios.post(url, payload);
+
+    run.then(res => {
+        document.getElementById('globalModal').classList.add('hidden');
+        toast('success', res.data.message);
+        loadBlogs();
+    }).catch(err => {
+        const msg = err.response?.data?.message || 'İşlem başarısız';
+        toast('error', msg);
+    });
+}
+
+function deleteCategory(id) {
+    if (!confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) return;
+    axios.delete(CMS_URLS.blog.categories.destroy(id)).then(res => {
+        toast('success', res.data.message);
+        loadCategories();
+    }).catch(err => {
+        const msg = err.response?.data?.message || 'Silme başarısız';
+        toast('error', msg);
     });
 }
 
@@ -401,29 +571,143 @@ function loadPartners() {
 }
 
 function openPartnerCreate() {
-    Swal.fire({
-        title: 'İş Ortağı Ekle',
-        html: `
-            <input type="text" id="pName" placeholder="Şirket Adı" class="swal2-input w-full" style="display:flex">
-            <input type="url" id="pUrl" placeholder="Website URL" class="swal2-input w-full" style="display:flex">
-            <input type="text" id="pAlt" placeholder="Alt Text" class="swal2-input w-full" style="display:flex">`,
-        showCancelButton: true,
-        confirmButtonColor: '#02E0FB',
-        confirmButtonText: 'Ekle',
-        cancelButtonText: 'İptal',
-        preConfirm: () => {
-            const name = document.getElementById('pName').value;
-            if (!name) { Swal.showValidationMessage('Şirket adı zorunludur.'); return false; }
-            return { name, website_url: document.getElementById('pUrl').value, alt_text: document.getElementById('pAlt').value };
-        }
-    }).then(r => {
-        if (r.isConfirmed) {
-            axios.post(CMS_URLS.partners.store, r.value).then(res => {
-                toast('success', res.data.message);
-                loadPartners();
-            });
-        }
+    document.getElementById('modalTitle').textContent = 'İş Ortağı Ekle';
+    document.getElementById('modalBody').innerHTML = `
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Şirket Adı <span class="text-red-500">*</span></label>
+                <input type="text" id="pName" placeholder="Şirket Adı" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Logo Görseli</label>
+                <div id="pLogoArea" class="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-[#02E0FB] hover:bg-[#02E0FB]/5 transition-all" onclick="document.getElementById('pLogoInput').click()">
+                    <div id="pLogoPlaceholder">
+                        <svg class="w-8 h-8 mx-auto text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p class="text-xs text-gray-500">PNG, JPG, WEBP — tıklayın</p>
+                    </div>
+                    <img id="pLogoPreview" class="hidden max-h-16 mx-auto object-contain" src="">
+                    <input type="file" id="pLogoInput" accept="image/*" class="hidden" onchange="previewPartnerLogo(this)">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
+                <input type="url" id="pUrl" placeholder="https://example.com" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Alt Text</label>
+                <input type="text" id="pAlt" placeholder="Alternatif metin" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#02E0FB]">
+            </div>
+        </div>
+        <p id="pError" class="text-sm text-red-500 mt-2 hidden">Şirket adı zorunludur.</p>`;
+    document.getElementById('modalFooter').innerHTML = `
+        <button onclick="document.getElementById('globalModal').classList.add('hidden')" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">İptal</button>
+        <button onclick="submitPartner()" class="px-4 py-2 text-sm text-white bg-[#02E0FB] hover:bg-cyan-400 rounded-lg font-medium">Ekle</button>`;
+    document.getElementById('globalModal').classList.remove('hidden');
+}
+
+function previewPartnerLogo(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('pLogoPreview').src = e.target.result;
+            document.getElementById('pLogoPreview').classList.remove('hidden');
+            document.getElementById('pLogoPlaceholder').classList.add('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function submitPartner() {
+    const name = document.getElementById('pName').value;
+    const error = document.getElementById('pError');
+    if (!name) { error.classList.remove('hidden'); return; }
+    error.classList.add('hidden');
+
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('website_url', document.getElementById('pUrl').value);
+    fd.append('alt_text', document.getElementById('pAlt').value);
+    const logoFile = document.getElementById('pLogoInput').files[0];
+    if (logoFile) fd.append('logo', logoFile);
+
+    axios.post(CMS_URLS.partners.store, fd, {
+        headers: { 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' }
+    }).then(res => {
+        document.getElementById('globalModal').classList.add('hidden');
+        toast('success', res.data.message);
+        loadPartners();
+    }).catch(err => {
+        const msg = err.response?.data?.message || 'İş ortağı eklenemedi';
+        toast('error', msg);
     });
+}
+
+// ─── Blog Form Yardımcıları (AJAX ile yüklenen partial'da script çalışmaz, buraya alındı) ───
+
+function autoSlug(title) {
+    const slug = title.toLowerCase()
+        .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s')
+        .replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
+        .replace(/[^a-z0-9\s-]/g,'')
+        .trim().replace(/\s+/g,'-');
+    const slugEl = document.getElementById('blogSlug');
+    if (slugEl && !slugEl.dataset.manual) slugEl.value = slug;
+}
+
+document.addEventListener('input', function(e) {
+    if (e.target.id === 'blogSlug') e.target.dataset.manual = '1';
+});
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.size > 2 * 1024 * 1024) { alert('Dosya çok büyük — maks. 2 MB.'); input.value = ''; return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').classList.remove('hidden');
+            document.getElementById('uploadPlaceholder').classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeImage() {
+    document.getElementById('featuredImageInput').value = '';
+    document.getElementById('imagePreview').classList.add('hidden');
+    document.getElementById('uploadPlaceholder').classList.remove('hidden');
+    document.getElementById('removeFeaturedImage').value = '1';
+}
+
+function execCmd(cmd, arg) {
+    if (cmd === 'createLink') { const url = prompt('Link URL:'); if (url) document.execCommand(cmd, false, url); }
+    else if (cmd === 'formatBlock') { document.execCommand(cmd, false, arg); }
+    else { document.execCommand(cmd, false, null); }
+    document.getElementById('contentEditor')?.focus();
+}
+
+document.addEventListener('submit', function(e) {
+    if (e.target.id === 'blogForm') {
+        const ed = document.getElementById('contentEditor');
+        const hi = document.getElementById('contentHidden');
+        if (ed && hi) hi.value = ed.innerHTML;
+    }
+});
+
+function confirmDelete(url, cb) {
+    if (!confirm('Bu öğeyi silmek istediğinize emin misiniz?')) return;
+    axios.delete(url).then(res => {
+        toast('success', res.data.message || 'Silindi');
+        if (cb) cb();
+    }).catch(() => toast('error', 'Silme başarısız'));
+}
+
+function toast(type, msg) {
+    const el = document.createElement('div');
+    el.className = 'fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ' + (type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
 }
 </script>
 @endpush

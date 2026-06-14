@@ -155,7 +155,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-4 py-3.5 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
+        <div class="px-4 py-3.5 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2 bg-gray-50/30">
             <div class="text-xs text-gray-400 font-medium" id="logTableInfo">—</div>
             <div id="logPagination" class="flex items-center gap-1.5"></div>
         </div>

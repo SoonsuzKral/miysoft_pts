@@ -151,7 +151,7 @@
         </div>
 
         {{-- Pagination --}}
-        <div id="instancePagination" class="mt-4 flex items-center justify-between">
+        <div id="instancePagination" class="mt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div class="text-xs text-gray-500" id="instanceTableInfo">—</div>
             <div class="flex items-center gap-1" id="instancePages"></div>
         </div>

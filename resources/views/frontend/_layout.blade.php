@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'MİYSOFT PTS') — Akıllı Personel Takip Sistemi</title>
-    <meta name="description" content="Türkiye'nin en kapsamlı bulut tabanlı personel yönetim sistemi.">
+    <meta name="description" content="@yield('meta_description', 'Türkiye\'nin en kapsamlı bulut tabanlı personel yönetim sistemi.')">
     <link rel="icon" href="{{ asset('favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">

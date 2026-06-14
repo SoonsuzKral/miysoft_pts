@@ -1,5 +1,6 @@
 @extends('frontend._layout')
-@section('title', ($post->title ?? 'Blog Yazısı') . ' — MİYSOFT Blog')
+@section('title', ($post->meta_title ?? $post->title ?? 'Blog Yazısı') . ' — MİYSOFT Blog')
+@section('meta_description', $post->meta_description ?? '')
 
 @section('content')
 {{-- Hero --}}

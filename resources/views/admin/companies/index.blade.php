@@ -89,7 +89,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="px-3 sm:px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+            <div class="px-3 sm:px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                 <div class="text-xs text-gray-500" id="companyTableInfo">—</div>
                 <div id="companyTablePagination" class="flex gap-1"></div>
             </div>
@@ -146,7 +146,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="px-3 sm:px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+            <div class="px-3 sm:px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                 <div class="text-xs text-gray-500" id="deptTableInfo">—</div>
                 <div id="deptPagination" class="flex gap-1"></div>
             </div>
@@ -192,7 +192,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="px-3 sm:px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+            <div class="px-3 sm:px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                 <div class="text-xs text-gray-500" id="positionTableInfo">—</div>
                 <div id="positionPagination" class="flex gap-1"></div>
             </div>
@@ -264,7 +264,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="px-3 sm:px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+            <div class="px-3 sm:px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                 <div class="text-xs text-gray-500" id="personelTableInfo">—</div>
                 <div id="personelPagination" class="flex gap-1"></div>
             </div>

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
 use App\Mail\WelcomeMail;
+use App\Modules\Abonelik\Models\CompanySubscription;
+use App\Modules\Abonelik\Models\SubscriptionPlan;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,6 +67,25 @@ class RegisteredUserController extends Controller
             $user->assignRole('company_admin');
         }
 
+        // 15 günlük deneme aboneliği oluştur
+        if ($company) {
+            $trialPlan = SubscriptionPlan::where('slug', 'trial')->first()
+                ?? SubscriptionPlan::active()->orderBy('price_monthly')->first();
+
+            if ($trialPlan) {
+                CompanySubscription::create([
+                    'company_id'    => $company->id,
+                    'plan_id'       => $trialPlan->id,
+                    'status'        => 'trial',
+                    'billing_cycle' => 'monthly',
+                    'price'         => 0,
+                    'started_at'    => now(),
+                    'trial_ends_at' => now()->addDays(15),
+                    'ends_at'       => now()->addDays(15),
+                ]);
+            }
+        }
+
         event(new Registered($user));
 
         Auth::login($user);
@@ -75,7 +96,7 @@ class RegisteredUserController extends Controller
                 name: $user->name,
                 companyName: $company?->name ?? 'MİYSOFT PTS',
                 loginUrl: route('login'),
-                trialEndsAt: $company?->trial_ends_at?->format('d.m.Y') ?? '14 gün',
+                trialEndsAt: $company?->trial_ends_at?->format('d.m.Y') ?? now()->addDays(15)->format('d.m.Y'),
             ));
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('WelcomeMail gönderilemedi: ' . $e->getMessage());

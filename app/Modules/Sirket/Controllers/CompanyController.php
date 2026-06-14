@@ -346,6 +346,59 @@ class CompanyController extends Controller
                 'created_at' => now(),
             ]);
 
+            // Belgeleri kaydet
+            $docFiles = $request->file('documents');
+            if (is_array($docFiles) && count($docFiles) > 0) {
+                $allowedMimes = ['pdf','jpg','jpeg','png','docx','doc','xlsx','xls','csv'];
+                foreach ($docFiles as $index => $docFile) {
+                    // Handle both: documents[0][file] → ['file' => UploadedFile] and documents[0] → UploadedFile
+                    $file = $docFile instanceof \Illuminate\Http\UploadedFile
+                        ? $docFile
+                        : ($docFile['file'] ?? null);
+                    if (!$file || !$file->isValid()) continue;
+
+                    $type = $request->input("documents.{$index}.type");
+                    if (!$type) continue;
+
+                    $ext = strtolower($file->getClientOriginalExtension());
+                    if (!in_array($ext, $allowedMimes)) continue;
+
+                    try {
+                        $dir = "personel-documents/{$personel->id}";
+                        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($dir)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory($dir);
+                        }
+                        $path = $file->store($dir, 'public');
+
+                        $docId = DB::table('personel_documents')->insertGetId([
+                            'personel_id'   => $personel->id,
+                            'type'          => $type,
+                            'file_path'     => $path,
+                            'original_name' => $file->getClientOriginalName(),
+                            'mime'          => $file->getMimeType(),
+                            'file_size'     => $file->getSize(),
+                            'expiry_at'     => $request->input("documents.{$index}.expiry_at"),
+                            'created_by'    => auth()->id(),
+                            'created_at'    => now(),
+                            'updated_at'    => now(),
+                        ]);
+
+                        DB::table('audit_logs')->insert([
+                            'user_id'    => auth()->id(),
+                            'company_id' => $personel->company_id,
+                            'action'     => 'personel_document.uploaded',
+                            'model_type' => 'PersonelDocument',
+                            'model_id'   => $docId,
+                            'changes'    => json_encode(['type' => $type, 'personel_id' => $personel->id]),
+                            'ip'         => $request->ip(),
+                            'created_at' => now(),
+                        ]);
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Personel belgesi yüklenirken hata: " . $e->getMessage());
+                    }
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Personel basariyla olusturuldu.',

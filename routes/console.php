@@ -14,3 +14,5 @@ Schedule::call(function () {
         \App\Jobs\ConflictDetectionJob::dispatch($companyId, today()->toDateString());
     }
 })->dailyAt('06:00')->name('shift-conflict-detection')->withoutOverlapping();
+
+Schedule::command('attendance:auto')->everyMinute()->name('auto-attendance')->withoutOverlapping();

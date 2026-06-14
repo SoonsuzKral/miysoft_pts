@@ -67,6 +67,8 @@ super_admin,role.view,Rol görüntüleme
 super_admin,role.manage,Rol tam yönetim
 super_admin,permission.view,İzin görüntüleme
 super_admin,permission.manage,İzin tam yönetim
+super_admin,holiday.view,Tatil takvimi görüntüleme
+super_admin,holiday.manage,Tatil tam yönetim
 super_admin,notification.manage,Bildirim yönetim
 company_admin,access_admin,Admin paneline erişim
 company_admin,dashboard.view,Dashboard görüntüleme
@@ -129,6 +131,8 @@ company_admin,settings.view,Ayarlar görüntüleme
 company_admin,settings.manage,Ayarlar tam yönetim
 company_admin,role.view,Rol görüntüleme
 company_admin,role.manage,Rol tam yönetim
+company_admin,holiday.view,Tatil takvimi görüntüleme
+company_admin,holiday.manage,Tatil tam yönetim
 company_admin,notification.manage,Bildirim yönetim
 hr_manager,access_admin,Admin paneline erişim
 hr_manager,dashboard.view,Dashboard görüntüleme
@@ -166,6 +170,7 @@ hr_manager,travel.view,Seyahat görüntüleme
 hr_manager,travel.approve,Seyahat onaylama
 hr_manager,visitor.view,Ziyaretçi görüntüleme
 hr_manager,visitor.create,Ziyaretçi kaydı
+hr_manager,holiday.view,Tatil takvimi görüntüleme
 hr_manager,report.view,Rapor görüntüleme
 hr_manager,report.create,Rapor oluşturma
 hr_manager,report.export,Rapor dışa aktarma

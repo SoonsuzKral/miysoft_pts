@@ -128,4 +128,70 @@
             </select>
         </div>
     </div>
+
+    {{-- Belgeler --}}
+    <div class="border-t border-gray-100 pt-4 mt-2">
+        <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-semibold text-gray-700">Belgeler</h4>
+            <button type="button" onclick="addDocumentEntry()"
+                class="text-xs font-medium text-[#02E0FB] hover:text-cyan-600 transition-colors flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Belge Ekle
+            </button>
+        </div>
+
+        {{-- Mevcut Belgeler --}}
+        @if(isset($personel) && $personel->documents && $personel->documents->count() > 0)
+        <div class="mb-4">
+            <h5 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Mevcut Belgeler</h5>
+            <div class="space-y-2">
+                @foreach($personel->documents as $doc)
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group" id="doc-{{ $doc->id }}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-[#02E0FB]/10 flex items-center justify-center shrink-0">
+                            @php
+                            $ext = pathinfo($doc->file_path, PATHINFO_EXTENSION);
+                            $icon = match(strtolower($ext)) {
+                                'pdf' => '📄', 'jpg', 'jpeg', 'png' => '🖼️', 'docx', 'doc' => '📝', 'xlsx', 'xls', 'csv' => '📊', default => '📎'
+                            };
+                            @endphp
+                            <span class="text-base">{{ $icon }}</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-800">{{ $doc->type }}</p>
+                            <p class="text-xs text-gray-400">{{ $doc->original_name ?? basename($doc->file_path) }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <a href="{{ route('admin.personel.documents.view', $doc->id) }}"
+                           class="p-1.5 text-gray-400 hover:text-[#02E0FB] hover:bg-blue-50 rounded-lg transition-colors" title="Görüntüle" target="_blank">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </a>
+                        <a href="{{ route('admin.personel.documents.download', $doc->id) }}"
+                           class="p-1.5 text-gray-400 hover:text-[#02E0FB] hover:bg-blue-50 rounded-lg transition-colors" title="İndir">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </a>
+                        <button onclick="deleteDocument({{ $doc->id }})"
+                            class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Sil">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Yeni Belge Ekleme Alanı --}}
+        <div id="documentEntries" class="space-y-2">
+            <p class="text-xs text-gray-400 text-center py-3 bg-gray-50 rounded-lg border border-dashed border-gray-200" id="docEmptyMessage">Henüz belge eklenmedi. "Belge Ekle" butonuna tıklayarak belge yükleyebilirsiniz.</p>
+        </div>
+
+        <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Personel kaydedilirken belgeler otomatik olarak yüklenecektir. PDF, JPG, PNG, DOCX, XLSX — Max 10MB
+        </p>
+    </div>
 </form>

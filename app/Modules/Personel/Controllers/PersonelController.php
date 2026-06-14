@@ -96,6 +96,59 @@ class PersonelController extends Controller
 
         $personel = Personel::create($data);
 
+        // Belgeleri kaydet
+        $docFiles = $request->file('documents');
+        if (is_array($docFiles) && count($docFiles) > 0) {
+            $allowedMimes = ['pdf','jpg','jpeg','png','docx','doc','xlsx','xls','csv'];
+            foreach ($docFiles as $index => $docFile) {
+                // Handle both: documents[0][file] → ['file' => UploadedFile] and documents[0] → UploadedFile
+                $file = $docFile instanceof \Illuminate\Http\UploadedFile
+                    ? $docFile
+                    : ($docFile['file'] ?? null);
+                if (!$file || !$file->isValid()) continue;
+
+                $type = $request->input("documents.{$index}.type");
+                if (!$type) continue;
+
+                $ext = strtolower($file->getClientOriginalExtension());
+                if (!in_array($ext, $allowedMimes)) continue;
+
+                try {
+                    $dir = "personel-documents/{$personel->id}";
+                    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($dir)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory($dir);
+                    }
+                    $path = $file->store($dir, 'public');
+
+                    $docId = DB::table('personel_documents')->insertGetId([
+                        'personel_id'   => $personel->id,
+                        'type'          => $type,
+                        'file_path'     => $path,
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime'          => $file->getMimeType(),
+                        'file_size'     => $file->getSize(),
+                        'expiry_at'     => $request->input("documents.{$index}.expiry_at"),
+                        'created_by'    => auth()->id(),
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ]);
+
+                    DB::table('audit_logs')->insert([
+                        'user_id'    => auth()->id(),
+                        'company_id' => $personel->company_id,
+                        'action'     => 'personel_document.uploaded',
+                        'model_type' => 'PersonelDocument',
+                        'model_id'   => $docId,
+                        'changes'    => json_encode(['type' => $type, 'personel_id' => $personel->id]),
+                        'ip'         => request()->ip(),
+                        'created_at' => now(),
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Personel belgesi yüklenirken hata: " . $e->getMessage());
+                }
+            }
+        }
+
         AuditService::log("Personel oluşturuldu: {$personel->full_name}");
 
         return response()->json([
@@ -124,6 +177,8 @@ class PersonelController extends Controller
     {
         $this->authorize('update', $personel);
 
+        $personel->load('documents');
+
         $departments = \App\Models\Department::forCompany(auth()->user()->company_id)->get();
         $positions   = \App\Models\Position::forCompany(auth()->user()->company_id)->get();
 
@@ -144,12 +199,65 @@ class PersonelController extends Controller
 
         $personel->update($data);
 
+        // Belgeleri kaydet (güncelleme sırasında yeni eklenenler)
+        $docFiles = $request->file('documents');
+        if (is_array($docFiles) && count($docFiles) > 0) {
+            $allowedMimes = ['pdf','jpg','jpeg','png','docx','doc','xlsx','xls','csv'];
+            foreach ($docFiles as $index => $docFile) {
+                // Handle both: documents[0][file] → ['file' => UploadedFile] and documents[0] → UploadedFile
+                $file = $docFile instanceof \Illuminate\Http\UploadedFile
+                    ? $docFile
+                    : ($docFile['file'] ?? null);
+                if (!$file || !$file->isValid()) continue;
+
+                $type = $request->input("documents.{$index}.type");
+                if (!$type) continue;
+
+                $ext = strtolower($file->getClientOriginalExtension());
+                if (!in_array($ext, $allowedMimes)) continue;
+
+                try {
+                    $dir = "personel-documents/{$personel->id}";
+                    if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($dir)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory($dir);
+                    }
+                    $path = $file->store($dir, 'public');
+
+                    $docId = DB::table('personel_documents')->insertGetId([
+                        'personel_id'   => $personel->id,
+                        'type'          => $type,
+                        'file_path'     => $path,
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime'          => $file->getMimeType(),
+                        'file_size'     => $file->getSize(),
+                        'expiry_at'     => $request->input("documents.{$index}.expiry_at"),
+                        'created_by'    => auth()->id(),
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ]);
+
+                    DB::table('audit_logs')->insert([
+                        'user_id'    => auth()->id(),
+                        'company_id' => $personel->company_id,
+                        'action'     => 'personel_document.uploaded',
+                        'model_type' => 'PersonelDocument',
+                        'model_id'   => $docId,
+                        'changes'    => json_encode(['type' => $type, 'personel_id' => $personel->id]),
+                        'ip'         => request()->ip(),
+                        'created_at' => now(),
+                    ]);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Personel belgesi yüklenirken hata: " . $e->getMessage());
+                }
+            }
+        }
+
         AuditService::log("Personel güncellendi: {$personel->full_name}");
 
         return response()->json([
             'success' => true,
             'message' => 'Personel başarıyla güncellendi.',
-            'data'    => $personel->fresh(['department', 'position']),
+            'data'    => $personel->fresh(['department', 'position', 'documents']),
         ]);
     }
 
@@ -182,7 +290,6 @@ class PersonelController extends Controller
         $personel->load([
             'department',
             'position',
-            'documents',
             'leaveRequests.leaveType',
             'timeRecords' => fn ($q) => $q->latest()->limit(10),
         ]);

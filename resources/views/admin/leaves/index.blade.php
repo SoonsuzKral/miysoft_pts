@@ -100,7 +100,6 @@
 {{-- Tab Navigation --}}
 <div class="flex flex-wrap gap-1 border-b border-gray-200 mb-5">
     <button onclick="setLeaveTab('list')" id="ltab-list" class="px-4 py-2.5 text-sm font-medium border-b-2 border-[#02E0FB] text-[#02E0FB] transition-all">Talepler</button>
-    <button onclick="setLeaveTab('calendar')" id="ltab-calendar" class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all">Takvim</button>
     <button onclick="setLeaveTab('chart')" id="ltab-chart" class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all">İstatistik</button>
 </div>
 
@@ -183,41 +182,13 @@
                 </tbody>
             </table>
         </div>
-        <div class="px-4 py-3.5 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
+        <div class="px-4 py-3.5 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2 bg-gray-50/30">
             <div class="text-xs text-gray-400 font-medium" id="leaveTableInfo">—</div>
             <div id="leavePagination" class="flex items-center gap-1.5"></div>
         </div>
     </div>
 </div>
 
-{{-- TAKVİM TAB --}}
-<div id="view-calendar" class="hidden">
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
-        <div class="flex flex-wrap items-center gap-3">
-            <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Personel</label>
-                <select id="calPersonelFilter" class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#02E0FB]" onchange="calendar?.refetchEvents()">
-                    <option value="">Tümü</option>
-                    @foreach($personels as $p)
-                        <option value="{{ $p->id }}">{{ $p->first_name }} {{ $p->last_name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">İzin Türü</label>
-                <select id="calTypeFilter" class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#02E0FB]" onchange="calendar?.refetchEvents()">
-                    <option value="">Tümü</option>
-                    @foreach($leaveTypes as $lt)
-                        <option value="{{ $lt->id }}">{{ $lt->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-    </div>
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <div id="leaveCalendar" style="min-height: 550px;"></div>
-    </div>
-</div>
 
 {{-- İSTATİSTİK TAB --}}
 <div id="view-chart" class="hidden">
@@ -270,9 +241,7 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/tr.global.min.js"></script>
+
 <script src="{{ asset('js/admin/leave.js') }}"></script>
 <script>
 document.body.dataset.page = 'leaves';
@@ -307,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── Tab Switching ──────────────────────────────────────
 
 function setLeaveTab(tab) {
-    ['list','calendar','chart'].forEach(t => {
+    ['list','chart'].forEach(t => {
         const view = document.getElementById('view-' + t);
         if (view) view.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById('ltab-' + t);
@@ -319,7 +288,6 @@ function setLeaveTab(tab) {
         }
     });
     document.getElementById('list-filters').classList.toggle('hidden', tab !== 'list');
-    if (tab === 'calendar' && !window.leaveCalendar) initLeaveCalendar();
     if (tab === 'chart') loadLeaveCharts();
 }
 
@@ -363,50 +331,6 @@ function setQuickFilter(range) {
 
 function applyDateFilter() {
     loadLeaveRequests();
-}
-
-// ─── FullCalendar ───────────────────────────────────────
-
-let leaveCalendar = null;
-
-function initLeaveCalendar() {
-    const el = document.getElementById('leaveCalendar');
-    if (!el) return;
-    leaveCalendar = new FullCalendar.Calendar(el, {
-        locale: 'tr',
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek',
-        },
-        height: 600,
-        editable: false,
-        eventSources: [{
-            url: '{{ route("admin.leave.calendar") }}',
-            extraParams: () => ({
-                personel_id: document.getElementById('calPersonelFilter')?.value || '',
-                leave_type_id: document.getElementById('calTypeFilter')?.value || '',
-            }),
-            failure: () => toast('error', 'Takvim yüklenemedi.'),
-        }],
-        eventClick: info => {
-            const e = info.event;
-            Swal.fire({
-                title: e.title,
-                html: `
-                    <div class="text-left text-sm space-y-2">
-                        <p><span class="text-gray-400">Tarih:</span> <strong>${e.startStr}</strong></p>
-                        <p><span class="text-gray-400">İzin Türü:</span> <strong>${e.extendedProps.leave_type || '—'}</strong></p>
-                        <p><span class="text-gray-400">Gün:</span> <strong>${e.extendedProps.total_days || '—'}</strong></p>
-                        <p><span class="text-gray-400">Durum:</span> <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Onaylı</span></p>
-                    </div>`,
-                confirmButtonText: 'Kapat',
-                confirmButtonColor: '#6B7280',
-            });
-        },
-    });
-    leaveCalendar.render();
 }
 
 // ─── Chart.js ───────────────────────────────────────────

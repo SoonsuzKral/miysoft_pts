@@ -113,7 +113,7 @@ $kpiCards = [
             </tbody>
         </table>
     </div>
-    <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+    <div class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div class="text-xs text-gray-500" id="assetTableInfo">—</div>
         <div id="assetPagination"></div>
     </div>

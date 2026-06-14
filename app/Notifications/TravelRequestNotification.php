@@ -20,7 +20,7 @@ class TravelRequestNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toArray(object $notifiable): array
@@ -31,11 +31,16 @@ class TravelRequestNotification extends Notification implements ShouldQueue
             'title'        => 'Yeni Seyahat Talebi',
             'message'      => "{$this->personelName} — {$this->destination}",
             'subtitle'     => "{$this->departure} → {$this->returnDate}",
-            'action_url'   => "/admin/travel/{$this->travelId}",
+            'action_url'   => "/admin/travel",
             'action_label' => 'Seyahati İncele',
             'model_id'     => $this->travelId,
             'model_type'   => 'travel_request',
             'color'        => 'cyan',
         ];
+    }
+
+    public function toBroadcast(object $notifiable): array
+    {
+        return $this->toArray($notifiable);
     }
 }

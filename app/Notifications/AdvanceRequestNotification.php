@@ -21,7 +21,7 @@ class AdvanceRequestNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toArray(object $notifiable): array
@@ -32,11 +32,16 @@ class AdvanceRequestNotification extends Notification implements ShouldQueue
             'title'        => 'Yeni Avans Talebi',
             'message'      => "{$this->personelName} — " . number_format($this->amount, 2) . " {$this->currency}",
             'subtitle'     => mb_substr($this->reason, 0, 80) . (mb_strlen($this->reason) > 80 ? '...' : ''),
-            'action_url'   => "/admin/advances/requests/{$this->advanceId}",
+            'action_url'   => "/admin/advances",
             'action_label' => 'Avansı İncele',
             'model_id'     => $this->advanceId,
             'model_type'   => 'advance_request',
             'color'        => 'orange',
         ];
+    }
+
+    public function toBroadcast(object $notifiable): array
+    {
+        return $this->toArray($notifiable);
     }
 }
