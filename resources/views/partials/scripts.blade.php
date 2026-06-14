@@ -227,6 +227,19 @@
         // Okundu işaretle
         axios.post('{{ route("admin.notifications.markRead") }}', { id }).catch(() => {});
         if (url && url !== 'null') {
+            // JSON show route'larını listing sayfalarına yönlendir (eski DB kayıtları için)
+            const map = [
+                { prefix: '/admin/leave/requests/',  target: '/admin/leave' },
+                { prefix: '/admin/expenses/requests/', target: '/admin/expenses' },
+                { prefix: '/admin/advances/requests/', target: '/admin/advances' },
+                { prefix: '/admin/travel/',           target: '/admin/travel' },
+            ];
+            for (const m of map) {
+                if (url.startsWith(m.prefix)) {
+                    window.location.href = m.target;
+                    return;
+                }
+            }
             window.location.href = url;
         }
         // Badge güncelle
