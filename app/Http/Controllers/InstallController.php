@@ -90,22 +90,22 @@ class InstallController extends Controller
 
     private function checkRequirements(): array
     {
-        return [
-            'php'       => version_compare(PHP_VERSION, '8.1.0', '>='),
-            'pdo'       => extension_loaded('pdo'),
-            'pdo_mysql' => extension_loaded('pdo_mysql'),
-            'mbstring'  => extension_loaded('mbstring'),
-            'openssl'   => extension_loaded('openssl'),
-            'json'      => extension_loaded('json'),
-            'curl'      => extension_loaded('curl'),
-            'fileinfo'  => extension_loaded('fileinfo'),
-            'gd'        => extension_loaded('gd'),
-            'zip'       => extension_loaded('zip'),
-            'bcmath'    => extension_loaded('bcmath'),
-            'xml'       => extension_loaded('xml'),
-            'tokenizer' => extension_loaded('tokenizer'),
-            'intl'      => extension_loaded('intl'),
-        ];
+        $required = ['php', 'pdo', 'pdo_mysql', 'mbstring', 'openssl', 'json', 'curl', 'fileinfo', 'xml', 'tokenizer', 'bcmath'];
+        $optional = ['gd', 'zip', 'intl'];
+
+        $result = [];
+
+        foreach ($required as $ext) {
+            $result[$ext] = ($ext === 'php')
+                ? version_compare(PHP_VERSION, '8.1.0', '>=')
+                : extension_loaded($ext);
+        }
+
+        foreach ($optional as $ext) {
+            $result[$ext . ' (opsiyonel)'] = extension_loaded($ext);
+        }
+
+        return $result;
     }
 
     private function updateEnv(array $data): void

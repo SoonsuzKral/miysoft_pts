@@ -63,19 +63,32 @@
                 <p class="desc">Aşağıdaki gereksinimlerin sağlandığından emin olun.</p>
                 <div class="req-grid">
                     @foreach($requirements as $key => $ok)
+                        @php $optional = str_contains($key, '(opsiyonel)'); @endphp
                         <div class="req-item">
                             <div class="check {{ $ok ? 'ok' : 'fail' }}">{{ $ok ? '✓' : '✗' }}</div>
-                            <span>{{ ucfirst($key) }} {{ $ok ? '' : '(eksik)' }}</span>
+                            <span>{{ ucfirst(str_replace(' (opsiyonel)', '', $key)) }}
+                                @if(!$ok && $optional)
+                                    <span style="color:#a16207;font-size:.6875rem;margin-left:.25rem">(opsiyonel)</span>
+                                @elseif(!$ok)
+                                    <span style="color:#dc2626;font-size:.6875rem;margin-left:.25rem">(gerekli)</span>
+                                @endif
+                            </span>
                         </div>
                     @endforeach
                 </div>
-                @if(in_array(false, $requirements, true))
+                @php
+                    $missingRequired = collect($requirements)->filter(fn($ok, $key) => !$ok && !str_contains($key, '(opsiyonel)'))->isNotEmpty();
+                @endphp
+                @if($missingRequired)
                     <p style="color:#dc2626;font-size:.8125rem;margin-bottom:1rem">Lütfen eksik gereksinimleri yükleyin ve sayfayı yenileyin.</p>
                 @endif
             </div>
 
             <form id="installForm" onsubmit="return install(this)">
-                <div id="formSection" style="{{ in_array(false, $requirements, true) ? 'display:none' : '' }}">
+                @php
+                    $canInstall = collect($requirements)->filter(fn($ok, $key) => !$ok && !str_contains($key, '(opsiyonel)'))->isEmpty();
+                @endphp
+                <div id="formSection" style="{{ $canInstall ? '' : 'display:none' }}">
                     <div class="section-title">Uygulama Ayarları</div>
                     <div class="form-group">
                         <label for="app_name">Uygulama Adı</label>
